@@ -1,0 +1,226 @@
+## 第16課：函數的高級應用
+
+在上一節課中，我們已經對函數進行了更為深入的研究，還探索了Python中的高階函數和Lambda函數。在這些知識的基礎上，這節課我們為大家分享兩個和函數相關的內容，一個是裝飾器，一個是函數的遞歸調用。
+
+### 裝飾器
+
+裝飾器是Python中**用一個函數裝飾另外一個函數或類並為其提供額外功能**的語法現象。裝飾器本身是一個函數，它的參數是被裝飾的函數或類，它的返回值是一個帶有裝飾功能的函數。很顯然，裝飾器是一個高階函數，它的參數和返回值都是函數。下面我們先通過一個簡單的例子來說明裝飾器的寫法和作用，假設已經有名為`downlaod`和`upload`的兩個函數，分別用於文件的上傳和下載，下面的代碼用休眠一段隨機時間的方式模擬了下載和上傳需要花費的時間，並沒有聯網做上傳下載。
+
+> **說明**：用Python語言實現聯網的上傳下載也很簡單，繼續你的學習，這個環節很快就會來到。
+
+```Python
+import random
+import time
+
+
+def download(filename):
+    print(f'開始下載{filename}.')
+    time.sleep(random.randint(2, 6))
+    print(f'{filename}下載完成.')
+
+    
+def upload(filename):
+    print(f'開始上傳{filename}.')
+    time.sleep(random.randint(4, 8))
+    print(f'{filename}上傳完成.')
+
+    
+download('MySQL從刪庫到跑路.avi')
+upload('Python從入門到住院.pdf')
+```
+
+現在我們希望知道調用`download`和`upload`函數做文件上傳下載到底用了多少時間，這個應該如何實現呢？相信很多小伙伴已經想到了，我們可以在函數開始執行的時候記錄一個時間，在函數調用結束後記錄一個時間，兩個時間相減就可以計算出下載或上傳的時間，代碼如下所示。
+
+```Python
+start = time.time()
+download('MySQL從刪庫到跑路.avi')
+end = time.time()
+print(f'花費時間: {end - start:.3f}秒')
+start = time.time()
+upload('Python從入門到住院.pdf')
+end = time.time()
+print(f'花費時間: {end - start:.3f}秒')
+```
+
+通過上面的代碼，我們可以得到下載和上傳花費的時間，但不知道大家是否注意到，上面記錄時間、計算和顯示執行時間的代碼都是重複代碼。有編程經驗的人都知道，**重複的代碼是萬惡之源**，那麼有沒有辦法在不寫重複代碼的前提下，用一種簡單優雅的方式記錄下函數的執行時間呢？在Python中，裝飾器就是解決這類問題的最佳選擇。我們可以把記錄函數執行時間的功能封裝到一個裝飾器中，在有需要的地方直接使用這個裝飾器就可以了，代碼如下所示。
+
+```Python
+import time
+
+
+# 定義裝飾器函數，它的參數是被裝飾的函數或類
+def record_time(func):
+    
+    # 定義一個帶裝飾功能（記錄被裝飾函數的執行時間）的函數
+    # 因為不知道被裝飾的函數有怎樣的參數所以使用*args和**kwargs接收所有參數
+    # 在Python中函數可以嵌套的定義（函數中可以再定義函數）
+    def wrapper(*args, **kwargs):
+        # 在執行被裝飾的函數之前記錄開始時間
+        start = time.time()
+        # 執行被裝飾的函數並獲取返回值
+        result = func(*args, **kwargs)
+        # 在執行被裝飾的函數之後記錄結束時間
+        end = time.time()
+        # 計算和顯示被裝飾函數的執行時間
+        print(f'{func.__name__}執行時間: {end - start:.3f}秒')
+        # 返回被裝飾函數的返回值（裝飾器通常不會改變被裝飾函數的執行結果）
+        return result
+    
+    # 返回帶裝飾功能的wrapper函數
+    return wrapper
+```
+
+使用上面的裝飾器函數有兩種方式，第一種方式就是直接調用裝飾器函數，傳入被裝飾的函數並獲得返回值，我們可以用這個返回值直接覆蓋原來的函數，那麼在調用時就已經獲得了裝飾器提供的額外的功能（記錄執行時間），大家可以試試下面的代碼就明白了。
+
+```Python
+download = record_time(download)
+upload = record_time(upload)
+download('MySQL從刪庫到跑路.avi')
+upload('Python從入門到住院.pdf')
+```
+
+上面的代碼中已經沒有重複代碼了，雖然寫裝飾器會花費一些心思，但是這是一個一勞永逸的騷操作，如果還有其他的函數也需要記錄執行時間，按照上面的代碼如法炮製即可。
+
+在Python中，使用裝飾器很有更為便捷的**語法糖**（編程語言中添加的某種語法，這種語法對語言的功能沒有影響，但是使用更加方法，代碼的可讀性也更強，我們將其稱之為“語法糖”或“糖衣語法”），可以用`@裝飾器函數`將裝飾器函數直接放在被裝飾的函數上，效果跟上面的代碼相同，下面是完整的代碼。
+
+```Python
+import random
+import time
+
+
+def record_time(func):
+
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        end = time.time()
+        print(f'{func.__name__}執行時間: {end - start:.3f}秒')
+        return result
+
+    return wrapper
+
+
+@record_time
+def download(filename):
+    print(f'開始下載{filename}.')
+    time.sleep(random.randint(2, 6))
+    print(f'{filename}下載完成.')
+
+
+@record_time
+def upload(filename):
+    print(f'開始上傳{filename}.')
+    time.sleep(random.randint(4, 8))
+    print(f'{filename}上傳完成.')
+
+
+download('MySQL從刪庫到跑路.avi')
+upload('Python從入門到住院.pdf')
+```
+
+上面的代碼，我們通過裝飾器語法糖為`download`和`upload`函數添加了裝飾器，這樣調用`download`和`upload`函數時，會記錄下函數的執行時間。事實上，被裝飾後的`download`和`upload`函數是我們在裝飾器`record_time`中返回的`wrapper`函數，調用它們其實就是在調用`wrapper`函數，所以擁有了記錄函數執行時間的功能。
+
+如果希望取消裝飾器的作用，那麼在定義裝飾器函數的時候，需要做一些額外的工作。 Python標準庫`functools`模塊的`wraps`函數也是一個裝飾器，我們將它放在`wrapper`函數上，這個裝飾器可以幫我們保留被裝飾之前的函數，這樣在需要取消裝飾器時，可以通過被裝飾函數的`__wrapped__`屬性獲得被裝飾之前的函數。
+
+```Python
+import random
+import time
+
+from functools import wraps
+
+
+def record_time(func):
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        end = time.time()
+        print(f'{func.__name__}執行時間: {end - start:.3f}秒')
+        return result
+
+    return wrapper
+
+
+@record_time
+def download(filename):
+    print(f'開始下載{filename}.')
+    time.sleep(random.randint(2, 6))
+    print(f'{filename}下載完成.')
+
+
+@record_time
+def upload(filename):
+    print(f'開始上傳{filename}.')
+    time.sleep(random.randint(4, 8))
+    print(f'{filename}上傳完成.')
+
+
+download('MySQL從刪庫到跑路.avi')
+upload('Python從入門到住院.pdf')
+# 取消裝飾器
+download.__wrapped__('MySQL必知必會.pdf')
+upload = upload.__wrapped__
+upload('Python從新手到大師.pdf')
+```
+
+**裝飾器函數本身也可以參數化**，簡單的說就是通過我們的裝飾器也是可以通過調用者傳入的參數來定制的，這個知識點我們在後面用到它的時候再為大家講解。
+
+### 遞歸調用
+
+Python中允許函數嵌套定義，也允許函數之間相互調用，而且一個函數還可以直接或間接的調用自身。函數自己調用自己稱為遞歸調用，那麼遞歸調用有什麼用處呢？現實中，有很多問題的定義本身就是一個遞歸定義，例如我們之前講到的階乘，非負整數`N`的階乘是`N`乘以`N-1`的階乘，即$ N! = N \times (N-1)! $，定義的左邊和右邊都出現了階乘的概念，所以這是一個遞歸定義。既然如此，我們可以使用遞歸調用的方式來寫一個求階乘的函數，代碼如下所示。
+
+```Python
+def fac(num):
+    if num in (0, 1):
+        return 1
+    return num * fac(num - 1)
+```
+
+上面的代碼中，`fac`函數中又調用了`fac`函數，這就是所謂的遞歸調用。代碼第2行的`if`條件叫做遞歸的收斂條件，簡單的說就是什麼時候要結束函數的遞歸調用，在計算階乘時，如果計算到`0`或`1`的階乘，就停止遞歸調用，直接返回`1`；代碼第4行的`num * fac(num - 1)`是遞歸公式，也就是階乘的遞歸定義。下面，我們簡單的分析下，如果用`fac(5)`計算`5`的階乘，整個過程會是怎樣的。
+
+```Python
+# 遞歸調用函數入棧
+# 5 * fac(4)
+# 5 * (4 * fac(3))
+# 5 * (4 * (3 * fac(2)))
+# 5 * (4 * (3 * (2 * fac(1))))
+# 停止遞歸函數出棧
+# 5 * (4 * (3 * (2 * 1)))
+# 5 * (4 * (3 * 2))
+# 5 * (4 * 6)
+# 5 * 24
+# 120
+print(fac(5))    # 120
+```
+注意，函數調用會通過內存中稱為“棧”（stack）的數據結構來保存當前代碼的執行現場，函數調用結束後會通過這個棧結構恢復之前的執行現場。棧是一種先進後出的數據結構，這也就意味著最早入棧的函數最後才會返回，而最後入棧的函數會最先返回。例如調用一個名為`a`的函數，函數`a`的執行體中又調用了函數`b`，函數`b`的執行體中又調用了函數`c`，那麼最先入棧的函數是`a`，最先出棧的函數是`c`。每進入一個函數調用，棧就會增加一層棧幀（stack frame），棧幀就是我們剛才提到的保存當前代碼執行現場的結構；每當函數調用結束後，棧就會減少一層棧幀。通常，內存中的棧空間很小，因此遞歸調用的次數如果太多，會導致棧溢出（stack overflow），所以**遞歸調用一定要確保能夠快速收斂**。我們可以嘗試執行`fac(5000)`，看看是不是會提示`RecursionError`錯誤，錯誤消息為：`maximum recursion depth exceeded in comparison`（超出最大遞歸深度），其實就是發生了棧溢出。
+
+我們使用的Python官方解釋器，默認將函數調用的棧結構最大深度設置為`1000`層。如果超出這個深度，就會發生上面說的`RecursionError`。當然，我們可以使用`sys`模塊的`setrecursionlimit`函數來改變遞歸調用的最大深度，例如：`sys.setrecursionlimit(10000)`，這樣就可以讓上面的`fac(5000)`順利執行出結果，但是我們不建議這樣做，因為讓遞歸快速收斂才是我們應該做的事情，否則就應該考慮使用循環遞推而不是遞歸。
+
+再舉一個之前講過的生成斐波那契數列的例子，因為斐波那契數列前兩個數都是`1`，從第3個數開始，每個數是前兩個數相加的和，可以記為`f(n) = f(n - 1) + f(n - 2)`，很顯然這又是一個遞歸的定義，所以我們可以用下面的遞歸調用函數來計算第​`n`個斐波那契數。
+
+```Python
+def fib(n):
+    if n in (1, 2):
+        return 1
+    return fib(n - 1) + fib(n - 2)
+
+
+# 打印前20個斐波那契數
+for i in range(1, 21):
+    print(fib(i))
+```
+
+需要提醒大家，上面計算斐波那契數的代碼雖然看起來非常簡單明了，但執行性能是比較糟糕的，原因大家可以自己思考一下，更好的做法還是之前講過的使用循環遞推的方式，代碼如下所示。
+
+```Python
+def fib(n):
+    a, b = 0, 1
+    for _ in range(n):
+        a, b = b, a + b
+    return a
+```
+
+###  簡單的總結
+
+裝飾器是Python中的特色語法，**可以通過裝飾器來增強現有的函數**，這是一種非常有用的編程技巧。一些複雜的問題用函數遞歸調用的方式寫起來真的很簡單，但是**函數的遞歸調用一定要注意收斂條件和遞歸公式**，找到遞歸公式才有機會使用遞歸調用，而收斂條件確定了遞歸什麼時候停下來。函數調用通過內存中的棧空間來保存現場和恢復現場，棧空間通常都很小，所以**遞歸如果不能迅速收斂，很可能會引發棧溢出錯誤，從而導致程序的崩潰**。
