@@ -1,0 +1,199 @@
+## 第15課：函數使用進階
+
+前面我們講到了關於函數的知識，我們還講到過Python中常用的數據類型，這些類型的變量都可以作為函數的參數或返回值，用好函數還可以讓我們做更多的事情。
+
+### 關鍵字參數
+
+下面是一個判斷傳入的三條邊長能否構成三角形的函數，在調用函數傳入參數時，我們可以指定參數名，也可以不指定參數名，代碼如下所示。
+
+```Python
+def is_triangle(a, b, c):
+    print(f'a = {a}, b = {b}, c = {c}')
+    return a + b > c and b + c > a and a + c > b
+
+
+# 調用函數傳入參數不指定參數名按位置對號入座
+print(is_triangle(1, 2, 3))
+# 調用函數通過“參數名=參數值”的形式按順序傳入參數
+print(is_triangle(a=1, b=2, c=3))
+# 調用函數通過“參數名=參數值”的形式不按順序傳入參數
+print(is_triangle(c=3, a=1, b=2))
+```
+
+在沒有特殊處理的情況下，函數的參數都是**位置參數**，也就意味著傳入參數的時候對號入座即可，如上面代碼的第7行所示，傳入的參數值`1`、`2`、`3`會依次賦值給參數`a`、`b`、`c`。當然，也可以通過`參數名=參數值`的方式傳入函數所需的參數，因為指定了參數名，傳入參數的順序可以進行調整，如上面代碼的第9行和第11行所示。
+
+調用函數時，如果希望函數的調用者必須以`參數名=參數值`的方式傳參，可以用**命名關鍵字參數**（keyword-only argument）取代位置參數。所謂命名關鍵字參數，是在函數的參數列表中，寫在`*`之後的參數，代碼如下所示。
+
+```Python
+def is_triangle(*, a, b, c):
+    print(f'a = {a}, b = {b}, c = {c}')
+    return a + b > c and b + c > a and a + c > b
+
+
+# TypeError: is_triangle() takes 0 positional arguments but 3 were given
+# print(is_triangle(3, 4, 5))
+# 傳參時必須使用“參數名=參數值”的方式，位置不重要
+print(is_triangle(a=3, b=4, c=5))
+print(is_triangle(c=5, b=4, a=3))
+```
+
+> **注意**：上面的`is_triangle`函數，參數列表中的`*`是一個分隔符，`*`前面的參數都是位置參數，而`*`後面的參數就是命名關鍵字參數。
+
+我們之前講過在函數的參數列表中可以使用**可變參數**`*args`來接收任意數量的參數，但是我們需要看看，`*args`是否能夠接收帶參數名的參數。
+
+```Python
+def calc(*args):
+    result = 0
+    for arg in args:
+        if type(arg) in (int, float):
+            result += arg
+    return result
+
+
+print(calc(a=1, b=2, c=3))
+```
+
+執行上面的代碼會引發`TypeError`錯誤，錯誤消息為`calc() got an unexpected keyword argument 'a'`，由此可見，`*args`並不能處理帶參數名的參數。我們在設計函數時，如果既不知道調用者會傳入的參數個數，也不知道調用者會不會指定參數名，那麼同時使用可變參數和**關鍵字參數**。關鍵字參數會將傳入的帶參數名的參數組裝成一個字典，參數名就是字典中鍵值對的鍵，而參數值就是字典中鍵值對的值，代碼如下所示。
+
+```Python
+def calc(*args, **kwargs):
+    result = 0
+    for arg in args:
+        if type(arg) in (int, float):
+            result += arg
+    for value in kwargs.values():
+        if type(value) in (int, float):
+            result += value
+    return result
+
+
+print(calc())                  # 0
+print(calc(1, 2, 3))           # 6
+print(calc(a=1, b=2, c=3))     # 6
+print(calc(1, 2, c=3, d=4))    # 10
+```
+
+> **提示**：**不帶參數名的參數（位置參數）必須出現在帶參數名的參數（關鍵字參數）之前**，否則將會引發異常。例如，執行`calc(1, 2, c=3, d=4, 5)`將會引發`SyntaxError`錯誤，錯誤消息為`positional argument follows keyword argument`，翻譯成中文意思是“位置參數出現在關鍵字參數之後”。
+
+### 高階函數的用法
+
+在前面幾節課中，我們講到了面向對象程序設計，在面向對象的世界中，一切皆為對象，所以類和函數也是對象。函數的參數和返回值可以是任意類型的對象，這就意味著**函數本身也可以作為函數的參數或返回值**，這就是所謂的**高階函數**。
+
+如果我們希望上面的`calc`函數不僅僅可以做多個參數求和，還可以做多個參數求乘積甚至更多的二元運算，我們就可以使用高階函數的方式來改寫上面的代碼，將加法運算從函數中移除掉，具體的做法如下所示。
+
+```Python
+def calc(*args, init_value, op, **kwargs):
+    result = init_value
+    for arg in args:
+        if type(arg) in (int, float):
+            result = op(result, arg)
+    for value in kwargs.values():
+        if type(value) in (int, float):
+            result = op(result, value)
+    return result
+```
+
+注意，上面的函數增加了兩個參數，其中`init_value`代表運算的初始值，`op`代表二元運算函數。經過改造的`calc`函數不僅僅可以實現多個參數的累加求和，也可以實現多個參數的累乘運算，代碼如下所示。
+
+```Python
+def add(x, y):
+    return x + y
+
+
+def mul(x, y):
+    return x * y
+
+
+print(calc(1, 2, 3, init_value=0, op=add, x=4, y=5))      # 15
+print(calc(1, 2, x=3, y=4, z=5, init_value=1, op=mul))    # 120
+```
+
+通過對高階函數的運用，`calc`函數不再和加法運算耦合，所以靈活性和通用性會變強，這是一種解耦合的編程技巧，但是最初學者來說可能會稍微有點難以理解。需要注意的是，將函數作為參數和調用函數是有顯著的區別的，**調用函數需要在函數名後面跟上圓括號，而把函數作為參數時只需要函數名即可**。上面的代碼也可以不用定義`add`和`mul`函數，因為Python標準庫中的`operator`模塊提供了代表加法運算的`add`和代表乘法運算的`mul`函數，我們直接使用即可，代碼如下所示。
+
+```Python
+import operator
+
+print(calc(1, 2, 3, init_value=0, op=operator.add, x=4, y=5))      # 15
+print(calc(1, 2, x=3, y=4, z=5, init_value=1, op=operator.mul))    # 120
+```
+
+Python內置函數中有不少高階函數，我們前面提到過的`filter`和`map`函數就是高階函數，前者可以實現對序列中元素的過濾，後者可以實現對序列中元素的映射，例如我們要去掉一個整數列表中的奇數，並對所有的偶數求平方得到一個新的列表，就可以直接使用這兩個函數來做到，具體的做法是如下所示。
+
+```Python
+def is_even(num):
+    return num % 2 == 0
+
+
+def square(num):
+    return num ** 2
+
+
+numbers1 = [35, 12, 8, 99, 60, 52]
+numbers2 = list(map(square, filter(is_even, numbers1)))
+print(numbers2)    # [144, 64, 3600, 2704]
+```
+
+當然，要完成上面代碼的功能，也可以使用列表生成式，列表生成式的做法更為簡單優雅。
+
+```Python
+numbers1 = [35, 12, 8, 99, 60, 52]
+numbers2 = [num ** 2 for num in numbers1 if num % 2 == 0]
+print(numbers2)    # [144, 64, 3600, 2704]
+```
+
+### Lambda函數
+
+在使用高階函數的時候，如果作為參數或者返回值的函數本身非常簡單，一行代碼就能夠完成，那麼我們可以使用**Lambda函數**來表示。 Python中的Lambda函數是沒有的名字函數，所以很多人也把它叫做**匿名函數**，匿名函數只能有一行代碼，代碼中的表達式產生的運算結果就是這個匿名函數的返回值。上面代碼中的`is_even`和`square`函數都只有一行代碼，我們可以用Lambda函數來替換掉它們，代碼如下所示。
+
+```Python
+numbers1 = [35, 12, 8, 99, 60, 52]
+numbers2 = list(map(lambda x: x ** 2, filter(lambda x: x % 2 == 0, numbers1)))
+print(numbers2)    # [144, 64, 3600, 2704]
+```
+
+通過上面的代碼可以看出，定義Lambda函數的關鍵字是`lambda`，後面跟函數的參數，如果有多個參數用逗號進行分隔；冒號後面的部分就是函數的執行體，通常是一個表達式，表達式的運算結果就是Lambda函數的返回值，不需要寫`return` 關鍵字。
+
+如果需要使用加減乘除這種簡單的二元函數，也可以用Lambda函數來書寫，例如調用上面的`calc`函數時，可以通過傳入Lambda函數來作為`op`參數的參數值。當然，`op`參數也可以有默認值，例如我們可以用一個代表加法運算的Lambda函數來作為`op`參數的默認值。
+
+```Python
+def calc(*args, init_value=0, op=lambda x, y: x + y, **kwargs):
+    result = init_value
+    for arg in args:
+        if type(arg) in (int, float):
+            result = op(result, arg)
+    for value in kwargs.values():
+        if type(value) in (int, float):
+            result = op(result, value)
+    return result
+
+
+# 調用calc函數，使用init_value和op的默認值
+print(calc(1, 2, 3, x=4, y=5))    # 15
+# 調用calc函數，通過lambda函數給op參數賦值
+print(calc(1, 2, 3, x=4, y=5, init_value=1, op=lambda x, y: x * y))    # 120
+```
+
+> **提示**：注意上面的代碼中的`calc`函數，它同時使用了可變參數、關鍵字參數、命名關鍵字參數，其中命名關鍵字參數要放在可變參數和關鍵字參數之間，傳參時先傳入可變參數，關鍵字參數和命名關鍵字參數的先後順序並不重要。
+
+有很多函數在Python中用一行代碼就能實現，我們可以用Lambda函數來定義這些函數，調用Lambda函數就跟調用普通函數一樣，代碼如下所示。
+
+```Python
+import operator, functools
+
+# 一行代碼定義求階乘的函數
+fac = lambda num: functools.reduce(operator.mul, range(1, num + 1), 1)
+# 一行代碼定義判斷素數的函數
+is_prime = lambda x: x > 1 and all(map(lambda f: x % f, range(2, int(x ** 0.5) + 1)))
+
+# 調用Lambda函數
+print(fac(10))        # 3628800
+print(is_prime(9))    # False
+```
+
+> **提示1**：上面使用的`reduce`函數是Python標準庫`functools`模塊中的函數，它可以實現對數據的歸約操作，通常情況下，**過濾**（filter）、**映射**（map）和**歸約**（reduce）是處理數據中非常關鍵的三個步驟，而Python的標準庫也提供了對這三個操作的支持。
+>
+> **提示2**：上面使用的`all`函數是Python內置函數，如果傳入的序列中所有布爾值都是`True`，`all`函數就返回`True`，否則`all`函數就返回`False`。
+
+###  簡單的總結
+
+Python中的函數可以使用可變參數`*args`和關鍵字參數`**kwargs`來接收任意數量的參數，而且傳入參數時可以帶上參數名也可以沒有參數名，可變參數會被處理成一個元組，而關鍵字參數會被處理成一個字典。 **Python中的函數是一等函數，可以賦值給變量，也可以作為函數的參數和返回值**，這也就意味著我們可以在Python中使用高階函數。如果我們要定義的函數非常簡單，只有一行代碼且不需要函數名，可以使用Lambda函數（匿名函數）。
