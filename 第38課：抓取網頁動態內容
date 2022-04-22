@@ -1,0 +1,279 @@
+## 第38課：抓取網頁動態內容
+
+根據權威機構發布的全球互聯網可訪問性審計報告，全球約有四分之三的網站其內容或部分內容是通過JavaScript動態生成的，這就意味著在瀏覽器窗口中“查看網頁源代碼”時無法在HTML代碼中找到這些內容，也就是說我們之前用的抓取數據的方式無法正常運轉了。解決這樣的問題基本上有兩種方案，一是獲取提供動態內容的數據接口，這種方式也適用於抓取手機 App 的數據；另一種是通過自動化測試工具 Selenium 運行瀏覽器獲取渲染後的動態內容。對於第一種方案，我們可以使用瀏覽器的“開發者工具”或者更為專業的抓包工具（如：Charles、Fiddler、Wireshark等）來獲取到數據接口，後續的操作跟上一個章節中講解的獲取“360圖片”網站的數據是一樣的，這裡我們不再進行贅述。這一章我們重點講解如何使用自動化測試工具 Selenium 來獲取網站的動態內容。
+
+### Selenium 介紹
+
+Selenium 是一個自動化測試工具，利用它可以驅動瀏覽器執行特定的行為，最終幫助爬蟲開發者獲取到網頁的動態內容。簡單的說，只要我們在瀏覽器窗口中能夠看到的內容，都可以使用 Selenium 獲取到，對於那些使用了 JavaScript 動態渲染技術的網站，Selenium 會是一個重要的選擇。下面，我們還是以 Chrome 瀏覽器為例，來講解 Selenium 的用法，大家需要先安裝 Chrome 瀏覽器並下載它的驅動。 Chrome 瀏覽器的驅動程序可以在[ChromeDriver官網](https://chromedriver.chromium.org/downloads)進行下載，驅動的版本要跟瀏覽器的版本對應，如果沒有完全對應的版本，就選擇版本代號最為接近的版本。
+
+<img src="https://gitee.com/jackfrued/mypic/raw/master/20220310134558.png" style="zoom: 35%">
+
+### 使用Selenium
+
+我們可以先通過`pip`來安裝 Selenium，命令如下所示。
+
+```Shell
+pip install selenium
+```
+
+#### 加載頁面
+
+接下來，我們通過下面的代碼驅動 Chrome 瀏覽器打開百度。
+
+```Python
+from selenium import webdriver
+
+# 創建Chrome瀏覽器對象
+browser = webdriver.Chrome()
+# 加載指定的頁面
+browser.get('https://www.baidu.com/')
+```
+
+如果不願意使用 Chrome 瀏覽器，也可以修改上面的代碼操控其他瀏覽器，只需創建對應的瀏覽器對象（如 Firefox、Safari 等）即可。運行上面的程序，如果看到如下所示的錯誤提示，那是說明我們還沒有將 Chrome 瀏覽器的驅動添加到 PATH 環境變量中，也沒有在程序中指定 Chrome 瀏覽器驅動所在的位置。
+
+```Shell
+selenium.common.exceptions.WebDriverException: Message: 'chromedriver' executable needs to be in PATH. Please see https://sites.google.com/a/chromium.org/chromedriver/home
+```
+
+解決這個問題的辦法有三種：
+
+1. 將下載的 ChromeDriver 放到已有的 PATH 環境變量下，建議直接跟 Python 解釋器放在同一個目錄，因為之前安裝 Python 的時候我們已經將 Python 解釋器的路徑放到 PATH 環境變量中了。
+
+2. 將 ChromeDriver 放到項目虛擬環境下的 `bin` 文件夾中（Windows 系統對應的目錄是 `Scripts`），這樣 ChromeDriver 就跟虛擬環境下的 Python 解釋器在同一個位置，肯定是能夠找到的。
+
+3. 修改上面的代碼，在創建 Chrome 對象時，通過`service`參數配置`Service`對象，並通過創建`Service`對象的`executable_path`參數指定 ChromeDriver 所在的位置，如下所示：
+
+    ```Python
+    from selenium import webdriver
+    from selenium.webdriver.chrome.service import Service
+    
+    browser = webdriver.Chrome(service=Service(executable_path='venv/bin/chromedriver'))
+    browser.get('https://www.baidu.com/')
+    ```
+
+#### 查找元素和模擬用戶行為
+
+接下來，我們可以嘗試模擬用戶在百度首頁的文本框輸入搜索關鍵字並點擊“百度一下”按鈕。在完成頁面加載後，可以通過`Chrome`對象的`find_element`和`find_elements`方法來獲取頁面元素，Selenium 支持多種獲取元素的方式，包括：CSS 選擇器、XPath、元素名字（標籤名）、元素 ID、類名等，前者可以獲取單個頁面元素（`WebElement`對象），後者可以獲取多個頁面元素構成的列表。獲取到`WebElement`對像以後，可以通過`send_keys`來模擬用戶輸入行為，可以通過`click`來模擬用戶點擊操作，代碼如下所示。
+
+```Python
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+
+browser = webdriver.Chrome()
+browser.get('https://www.baidu.com/')
+# 通過元素ID獲取元素
+kw_input = browser.find_element(By.ID, 'kw')
+# 模擬用戶輸入行為
+kw_input.send_keys('Python')
+# 通過CSS選擇器獲取元素
+su_button = browser.find_element(By.CSS_SELECTOR, '#su')
+# 模擬用戶點擊行為
+su_button.click()
+```
+
+如果要執行一個系列動作，例如模擬拖拽操作，可以創建`ActionChains`對象，有興趣的讀者可以自行研究。
+
+#### 隱式等待和顯式等待
+
+這裡還有一個細節需要大家知道，網頁上的元素可能是動態生成的，在我們使用`find_element`或`find_elements`方法獲取的時候，可能還沒有完成渲染，這時會引發`NoSuchElementException`錯誤。為了解決這個問題，我們可以使用隱式等待的方式，通過設置等待時間讓瀏覽器完成對頁面元素的渲染。除此之外，我們還可以使用顯示等待，通過創建`WebDriverWait`對象，並設置等待時間和條件，當條件沒有滿足時，我們可以先等待再嘗試進行後續的操作，具體的代碼如下所示。
+
+```Python
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.wait import WebDriverWait
+
+browser = webdriver.Chrome()
+# 設置瀏覽器窗口大小
+browser.set_window_size(1200, 800)
+browser.get('https://www.baidu.com/')
+# 設置隱式等待時間為10秒
+browser.implicitly_wait(10)
+kw_input = browser.find_element(By.ID, 'kw')
+kw_input.send_keys('Python')
+su_button = browser.find_element(By.CSS_SELECTOR, '#su')
+su_button.click()
+# 創建顯示等待對象
+wait_obj = WebDriverWait(browser, 10)
+# 設置等待條件（等搜索結果的div出現）
+wait_obj.until(
+    expected_conditions.presence_of_element_located(
+        (By.CSS_SELECTOR, '#content_left')
+    )
+)
+# 截屏
+browser.get_screenshot_as_file('python_result.png')
+```
+
+上面設置的等待條件`presence_of_element_located`表示等待指定元素出現，下面的表格列出了常用的等待條件及其含義。
+
+| 等待條件                                 | 具體含義                              |
+| ---------------------------------------- | ------------------------------------- |
+| `title_is / title_contains`              | 標題是指定的內容 / 標題包含指定的內容 |
+| `visibility_of`                          | 元素可見                              |
+| `presence_of_element_located`            | 定位的元素加載完成                    |
+| `visibility_of_element_located`          | 定位的元素變得可見                    |
+| `invisibility_of_element_located`        | 定位的元素變得不可見                  |
+| `presence_of_all_elements_located`       | 定位的所有元素加載完成                |
+| `text_to_be_present_in_element`          | 元素包含指定的內容                    |
+| `text_to_be_present_in_element_value`    | 元素的`value`屬性包含指定的內容       |
+| `frame_to_be_available_and_switch_to_it` | 載入並切換到指定的內部窗口            |
+| `element_to_be_clickable`                | 元素可點擊                            |
+| `element_to_be_selected`                 | 元素被選中                            |
+| `element_located_to_be_selected`         | 定位的元素被選中                      |
+| `alert_is_present`| 出現 Alert 彈窗                       |
+
+#### 執行JavaScript代碼
+
+對於使用瀑布式加載的頁面，如果希望在瀏覽器窗口中加載更多的內容，可以通過瀏覽器對象的`execute_scripts`方法執行 JavaScript 代碼來實現。對於一些高級的爬取操作，也很有可能會用到類似的操作，如果你的爬蟲代碼需要 JavaScript 的支持，建議先對 JavaScript 進行適當的了解，尤其是 JavaScript 中的 BOM 和 DOM 操作。我們在上面的代碼中截屏之前加入下面的代碼，這樣就可以利用 JavaScript 將網頁滾到最下方。
+
+```Python
+# 執行JavaScript代碼
+browser.execute_script('document.documentElement.scrollTop = document.documentElement.scrollHeight')
+```
+
+#### Selenium反爬的破解
+
+有一些網站專門針對 Selenium 設置了反爬措施，因為使用 Selenium 驅動的瀏覽器，在控制台中可以看到如下所示的`webdriver`屬性值為`true`，如果要繞過這項檢查，可以在加載頁面之前，先通過執行 JavaScript 代碼將其修改為`undefined`。
+
+<img src="https://gitee.com/jackfrued/mypic/raw/master/20220310154246.png" style="zoom:50%">
+
+另一方面，我們還可以將瀏覽器窗口上的“Chrome正受到自動測試軟件的控制”隱藏掉，完整的代碼如下所示。
+
+```Python
+# 創建Chrome參數對象
+options = webdriver.ChromeOptions()
+# 添加試驗性參數
+options.add_experimental_option('excludeSwitches', ['enable-automation'])
+options.add_experimental_option('useAutomationExtension', False)
+# 創建Chrome瀏覽器對象並傳入參數
+browser = webdriver.Chrome(options=options)
+# 執行Chrome開發者協議命令（在加載頁面時執行指定的JavaScript代碼）
+browser.execute_cdp_cmd(
+    'Page.addScriptToEvaluateOnNewDocument',
+    {'source': 'Object.defineProperty(navigator, "webdriver", {get: () => undefined})'}
+)
+browser.set_window_size(1200, 800)
+browser.get('https://www.baidu.com/')
+```
+
+#### 無頭瀏覽器
+
+很多時候，我們在爬取數據時並不需要看到瀏覽器窗口，只要有 Chrome 瀏覽器以及對應的驅動程序，我們的爬蟲就能夠運轉起來。如果不想看到瀏覽器窗口，我們可以通過下面的方式設置使用無頭瀏覽器。
+
+```Python
+options = webdriver.ChromeOptions()
+options.add_argument('--headless')
+browser = webdriver.Chrome(options=options)
+```
+
+### API參考
+
+Selenium 相關的知識還有很多，我們在此就不一一贅述了，下面為大家羅列一些瀏覽器對象和`WebElement`對象常用的屬性和方法。具體的內容大家還可以參考 Selenium [官方文檔的中文翻譯](https://selenium-python-zh.readthedocs.io/en/latest/index.html)。
+
+#### 瀏覽器對象
+
+表1. 常用屬性
+
+| 屬性名                  | 描述                             |
+| ----------------------- | -------------------------------- |
+| `current_url`           | 當前頁面的URL                    |
+| `current_window_handle` | 當前窗口的句柄（引用）           |
+| `name`                  | 瀏覽器的名稱                     |
+| `orientation`           | 當前設備的方向（橫屏、豎屏）     |
+| `page_source`           | 當前頁面的源代碼（包括動態內容） |
+| `title`                 | 當前頁面的標題                   |
+| `window_handles`        | 瀏覽器打開的所有窗口的句柄       |
+
+表2. 常用方法
+
+| 方法名                                 | 描述                                |
+| -------------------------------------- | ----------------------------------- |
+| `back` / `forward`                     | 在瀏覽歷史記錄中後退/前進           |
+| `close` / `quit`                       | 關閉當前瀏覽器窗口 / 退出瀏覽器實例 |
+| `get`                                  | 加載指定 URL 的頁面到瀏覽器中       |
+| `maximize_window`                      | 將瀏覽器窗口最大化                  |
+| `refresh`                              | 刷新當前頁面                        |
+| `set_page_load_timeout`                | 設置頁面加載超時時間                |
+| `set_script_timeout`                   | 設置 JavaScript 執行超時時間        |
+| `implicit_wait`                        | 設置等待元素被找到或目標指令完成    |
+| `get_cookie` / `get_cookies`           | 獲取指定的Cookie / 獲取所有Cookie   |
+| `add_cookie`                           | 添加 Cookie 信息                    |
+| `delete_cookie` / `delete_all_cookies` | 刪除指定的 Cookie / 刪除所有 Cookie |
+| `find_element` / `find_elements`       | 查找單個元素 / 查找一系列元素       |
+
+#### WebElement對象
+
+表1. WebElement常用屬性
+
+| 屬性名     | 描述           |
+| ---------- | -------------- |
+| `location` | 元素的位置     |
+| `size`     | 元素的尺寸     |
+| `text`     | 元素的文本內容 |
+| `id`       | 元素的 ID      |
+| `tag_name` | 元素的標籤名   |
+
+表2. 常用方法
+
+| 方法名                           | 描述                                 |
+| -------------------------------- | ------------------------------------ |
+| `clear`                          | 清空文本框或文本域中的內容           |
+| `click`                          | 點擊元素                             |
+| `get_attribute`                  | 獲取元素的屬性值                     |
+| `is_displayed`                   | 判斷元素對於用戶是否可見             |
+| `is_enabled`                     | 判斷元素是否處於可用狀態             |
+| `is_selected`                    | 判斷元素（單選框和復選框）是否被選中 |
+| `send_keys`                      | 模擬輸入文本                         |
+| `submit`                         | 提交表單                             |
+| `value_of_css_property`          | 獲取指定的CSS屬性值                  |
+| `find_element` / `find_elements` | 獲取單個子元素 / 獲取一系列子元素    |
+| `screenshot`                     | 為元素生成快照                       |
+
+### 簡單案例
+
+下面的例子演示瞭如何使用 Selenium 從“360圖片”網站搜索和下載圖片。
+
+```Python
+import os
+import time
+from concurrent.futures import ThreadPoolExecutor
+
+import requests
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+
+DOWNLOAD_PATH = 'images/'
+
+
+def download_picture(picture_url: str):
+    """
+    下載保存圖片
+    :param picture_url: 圖片的URL
+    """
+    filename = picture_url[picture_url.rfind('/') + 1:]
+    resp = requests.get(picture_url)
+    with open(os.path.join(DOWNLOAD_PATH, filename), 'wb') as file:
+        file.write(resp.content)
+
+
+if not os.path.exists(DOWNLOAD_PATH):
+    os.makedirs(DOWNLOAD_PATH)
+browser = webdriver.Chrome()
+browser.get('https://image.so.com/z?ch=beauty')
+browser.implicitly_wait(10)
+kw_input = browser.find_element(By.CSS_SELECTOR, 'input[name=q]')
+kw_input.send_keys('蒼老師')
+kw_input.send_keys(Keys.ENTER)
+for _ in range(10):
+    browser.execute_script(
+        'document.documentElement.scrollTop = document.documentElement.scrollHeight'
+    )
+    time.sleep(1)
+imgs = browser.find_elements(By.CSS_SELECTOR, 'div.waterfall img')
+with ThreadPoolExecutor(max_workers=32) as pool:
+    for img in imgs:
+        pic_url = img.get_attribute('src')
+        pool.submit(download_picture, pic_url)
+```
