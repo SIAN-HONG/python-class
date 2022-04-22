@@ -1,0 +1,234 @@
+## 第18課：面向對象編程應用
+
+面向對象編程對初學者來說不難理解但很難應用，雖然我們為大家總結過面向對象的三步走方法（定義類、創建對象、給對象發消息），但是說起來容易做起來難。 **大量的編程練習**和**閱讀優質的代碼**可能是這個階段最能夠幫助到大家的兩件事情。接下來我們還是通過經典的案例來剖析面向對象編程的知識，同時也通過這些案例為大家講解如何運用之前學過的Python知識。
+
+### 經典案例
+
+#### 案例1：撲克遊戲。
+
+> **說明**：簡單起見，我們的撲克只有52張牌（沒有大小王），遊戲需要將52張牌發到4個玩家的手上，每個玩家手上有13張牌，按照黑桃、紅心、草花、方塊的順序和點數從小到大排列，暫時不實現其他的功能。
+
+使用面向對象編程方法，首先需要從問題的需求中找到對象並抽像出對應的類，此外還要找到對象的屬性和行為。當然，這件事情並不是特別困難，我們可以從需求的描述中找出名詞和動詞，名詞通常就是對像或者是對象的屬性，而動詞通常是對象的行為。撲克遊戲中至少應該有三類對象，分別是牌、撲克和玩家，牌、撲克、玩家三個類也並不是孤立的。類和類之間的關係可以粗略的分為**is-a關係（繼承）**、**has-a關係（關聯）**和**use-a關係（依賴）**。很顯然撲克和牌是has-a關係，因為一副撲克有（has-a）52張牌；玩家和牌之間不僅有關聯關係還有依賴關係，因為玩家手上有（has-a）牌而且玩家使用了（use-a）牌。
+
+牌的屬性顯而易見，有花色和點數。我們可以用0到3的四個數字來代表四種不同的花色，但是這樣的代碼可讀性會非常糟糕，因為我們並不知道黑桃、紅心、草花、方塊跟0到3的數字的對應關係。如果一個變量的取值只有有限多個選項，我們可以使用枚舉。與C、Java等語言不同的是，Python中沒有聲明枚舉類型的關鍵字，但是可以通過繼承`enum`模塊的`Enum`類來創建枚舉類型，代碼如下所示。
+
+```Python
+from enum import Enum
+
+
+class Suite(Enum):
+    """花色(枚舉)"""
+    SPADE, HEART, CLUB, DIAMOND = range(4)
+```
+
+通過上面的代碼可以看出，定義枚舉類型其實就是定義符號常量，如`SPADE`、`HEART`等。每個符號常量都有與之對應的值，這樣表示黑桃就可以不用數字`0`，而是用`Suite.SPADE`；同理，表示方塊可以不用數字`3`， 而是用`Suite.DIAMOND`。注意，使用符號常量肯定是優於使用字面常量的，因為能夠讀懂英文就能理解符號常量的含義，代碼的可讀性會提升很多。 Python中的枚舉類型是可迭代類型，簡單的說就是可以將枚舉類型放到`for-in`循環中，依次取出每一個符號常量及其對應的值，如下所示。
+
+```Python
+for suite in Suite:
+    print(f'{suite}: {suite.value}')
+```
+
+接下來我們可以定義牌類。
+
+```Python
+class Card:
+    """牌"""
+
+    def __init__(self, suite, face):
+        self.suite = suite
+        self.face = face
+
+    def __repr__(self):
+        suites = '♠♥♣♦'
+        faces = ['', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
+        # 根據牌的花色和點數取到對應的字符
+        return f'{suites[self.suite.value]}{faces[self.face]}'
+```
+
+可以通過下面的代碼來測試下`Card`類。
+
+```Python
+card1 = Card(Suite.SPADE, 5)
+card2 = Card(Suite.HEART, 13)
+print(card1, card2)    # ♠5 ♥K
+```
+
+接下來我們定義撲克類。
+
+```Python
+import random
+
+
+class Poker:
+    """撲克"""
+
+    def __init__(self):
+        # 通過列表的生成式語法創建一個裝52張牌的列表
+        self.cards = [Card(suite, face) for suite in Suite
+                      for face in range(1, 14)]
+        # current屬性表示發牌的位置
+        self.current = 0
+
+    def shuffle(self):
+        """洗牌"""
+        self.current = 0
+        # 通過random模塊的shuffle函數實現列表的隨機亂序
+        random.shuffle(self.cards)
+
+    def deal(self):
+        """發牌"""
+        card = self.cards[self.current]
+        self.current += 1
+        return card
+
+    @property
+    def has_next(self):
+        """還有沒有牌可以發"""
+        return self.current < len(self.cards)
+```
+
+可以通過下面的代碼來測試下`Poker`類。
+
+```Python
+poker = Poker()
+poker.shuffle()
+print(poker.cards)
+```
+
+定義玩家類。
+
+```Python
+class Player:
+    """玩家"""
+
+    def __init__(self, name):
+        self.name = name
+        self.cards = []
+
+    def get_one(self, card):
+        """摸牌"""
+        self.cards.append(card)
+
+    def arrange(self):
+        self.cards.sort()
+```
+
+創建四個玩家並將牌發到玩家的手上。
+
+```Python
+poker = Poker()
+poker.shuffle()
+players = [Player('東邪'), Player('西毒'), Player('南帝'), Player('北丐')]
+for _ in range(13):
+    for player in players:
+        player.get_one(poker.deal())
+for player in players:
+    player.arrange()
+    print(f'{player.name}: ', end='')
+    print(player.cards)
+```
+
+執行上面的代碼會在`player.arrange()`那裡出現異常，因為`Player`的`arrange`方法使用了列表的`sort`對玩家手上的牌進行排序，排序需要比較兩個`Card`對象的大小，而`<`運算符又不能直接作用於`Card`類型，所以就出現了`TypeError`異常，異常消息為：`'<' not supported between instances of 'Card' and 'Card'`。
+
+為了解決這個問題，我們可以對`Card`類的代碼稍作修改，使得兩個`Card`對象可以直接用`<`進行大小的比較。這裡用到技術叫**運算符重載**，Python中要實現對`<`運算符的重載，需要在類中添加一個名為`__lt__`的魔術方法。很顯然，魔術方法`__lt__`中的`lt`是英文單詞“less than”的縮寫，以此類推，魔術方法`__gt__`對應`>`運算符，魔術方法`__le__`對應`<=`運算符，`__ge__`對應`>=`運算符，`__eq__`對應`==`運算符，`__ne__`對應`!=`運算符。
+
+修改後的`Card`類代碼如下所示。
+
+```Python
+class Card:
+    """牌"""
+
+    def __init__(self, suite, face):
+        self.suite = suite
+        self.face = face
+
+    def __repr__(self):
+        suites = '♠♥♣♦'
+        faces = ['', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
+        # 根據牌的花色和點數取到對應的字符
+        return f'{suites[self.suite.value]}{faces[self.face]}'
+    
+    def __lt__(self, other):
+        # 花色相同比較點數的大小
+        if self.suite == other.suite:
+            return self.face < other.face
+        # 花色不同比較花色對應的值
+        return self.suite.value < other.suite.value
+```
+
+>**說明：** 大家可以嘗試在上面代碼的基礎上寫一個簡單的撲克遊戲，如21點遊戲（Black Jack），遊戲的規則可以自己在網上找一找。
+
+#### 案例2：工資結算系統。
+
+> **要求**：某公司有三種類型的員工，分別是部門經理、程序員和銷售員。需要設計一個工資結算系統，根據提供的員工信息來計算員工的月薪。其中，部門經理的月薪是固定15000元；程序員按工作時間（以小時為單位）支付月薪，每小時200元；銷售員的月薪由1800元底薪加上銷售額5%的提成兩部分構成。
+
+通過對上述需求的分析，可以看出部門經理、程序員、銷售員都是員工，有相同的屬性和行為，那麼我們可以先設計一個名為`Employee`的父類，再通過繼承的方式從這個父類派生出部門經理、程序員和銷售員三個子類。很顯然，後續的代碼不會創建`Employee` 類的對象，因為我們需要的是具體的員工對象，所以這個類可以設計成專門用於繼承的抽像類。 Python中沒有定義抽像類的關鍵字，但是可以通過`abc`模塊中名為`ABCMeta` 的元類來定義抽像類。關於元類的知識，後面的課程中會有專門的講解，這裡不用太糾結這個概念，記住用法即可。
+
+```Python
+from abc import ABCMeta, abstractmethod
+
+
+class Employee(metaclass=ABCMeta):
+    """員工"""
+
+    def __init__(self, name):
+        self.name = name
+
+    @abstractmethod
+    def get_salary(self):
+        """結算月薪"""
+        pass
+```
+
+在上面的員工類中，有一個名為`get_salary`的方法用於結算月薪，但是由於還沒有確定是哪一類員工，所以結算月薪雖然是員工的公共行為但這裡卻沒有辦法實現。對於暫時無法實現的方法，我們可以使用`abstractmethod`裝飾器將其聲明為抽象方法，所謂**抽象方法就是只有聲明沒有實現的方法**，**聲明這個方法是為了讓子類去重寫這個方法**。接下來的代碼展示瞭如何從員工類派生出部門經理、程序員、銷售員這三個子類以及子類如何重寫父類的抽象方法。
+
+```Python
+class Manager(Employee):
+    """部門經理"""
+
+    def get_salary(self):
+        return 15000.0
+
+
+class Programmer(Employee):
+    """程序員"""
+
+    def __init__(self, name, working_hour=0):
+        super().__init__(name)
+        self.working_hour = working_hour
+
+    def get_salary(self):
+        return 200 * self.working_hour
+
+
+class Salesman(Employee):
+    """銷售員"""
+
+    def __init__(self, name, sales=0):
+        super().__init__(name)
+        self.sales = sales
+
+    def get_salary(self):
+        return 1800 + self.sales * 0.05
+```
+
+上面的`Manager`、`Programmer`、`Salesman`三個類都繼承自`Employee`，三個類都分別重寫了`get_salary`方法。 **重寫就是子類對父類已有的方法重新做出實現**。相信大家已經註意到了，三個子類中的`get_salary`各不相同，所以這個方法在程序運行時會產生**多態行為**，多態簡單的說就是**調用相同的方法**，**不同的子類對像做不同的事情**。
+
+我們通過下面的代碼來完成這個工資結算系統，由於程序員和銷售員需要分別錄入本月的工作時間和銷售額，所以在下面的代碼中我們使用了Python內置的`isinstance`函數來判斷員工對象的類型。我們之前講過的`type`函數也能識別對象的類型，但是`isinstance`函數更加強大，因為它可以判斷出一個對像是不是某個繼承結構下的子類型，你可以簡答的理解為`type`函數是對對像類型的精準匹配，而`isinstance`函數是對對像類型的模糊匹配。
+
+```Python
+emps = [
+    Manager('劉備'), Programmer('諸葛亮'), Manager('曹操'), 
+    Programmer('荀彧'), Salesman('呂布'), Programmer('張遼'),
+]
+for emp in emps:
+    if isinstance(emp, Programmer):
+        emp.working_hour = int(input(f'請輸入{emp.name}本月工作時間: '))
+    elif isinstance(emp, Salesman):
+        emp.sales = float(input(f'請輸入{emp.name}本月銷售額: '))
+    print(f'{emp.name}本月工資為: ￥{emp.get_salary():.2f}元')
+```
+
+### 簡單的總結
+
+面向對象的編程思想非常的好，也符合人類的正常思維習慣，但是要想靈活運用面向對象編程中的抽象、封裝、繼承、多態需要長時間的積累和沈淀，這件事情無法一蹴而就，屬於“路漫漫其修遠兮，吾將上下而求索”的東西。
