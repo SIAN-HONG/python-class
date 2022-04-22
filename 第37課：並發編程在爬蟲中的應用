@@ -1,0 +1,185 @@
+## 第37課：並發編程在爬蟲中的應用
+
+之前的課程，我們已經為大家介紹了 Python 中的多線程、多進程和異步編程，通過這三種手段，我們可以實現並發或併行編程，這一方面可以加速代碼的執行，另一方面也可以帶來更好的用戶體驗。爬蟲程序是典型的 I/O 密集型任務，對於 I/O 密集型任務來說，多線程和異步 I/O 都是很好的選擇，因為當程序的某個部分因 I/O 操作阻塞時，程序的其他部分仍然可以運轉，這樣我們不用在等待和阻塞中浪費大量的時間。下面我們以爬取“[360圖片](https://image.so.com/)”網站的圖片並保存到本地為例，為大家分別展示使用單線程、多線程和異步 I/O 編程的爬蟲程序有什麼區別，同時也對它們的執行效率進行簡單的對比。
+
+“360圖片”網站的頁面使用了 [Ajax](https://developer.mozilla.org/zh-CN/docs/Web/Guide/AJAX) 技術，這是很多網站都會使用的一種異步加載數據和局部刷新頁面的技術。簡單的說，頁面上的圖片都是通過 JavaScript 代碼異步獲取 JSON 數據並動態渲染生成的，而且整個頁面還使用了瀑布式加載（一邊向下滾動，一邊加載更多的圖片）。我們在瀏覽器的“開發者工具”中可以找到提供動態內容的數據接口，如下圖所示，我們需要的圖片信息就在服務器返回的 JSON 數據中。
+
+<img src="https://gitee.com/jackfrued/mypic/raw/master/20211205221352.png" style="zoom:50%;">
+
+例如，要獲取“美女”頻道的圖片，我們可以請求如下所示的URL，其中參數`ch`表示請求的頻道，`=`後面的參數值`beauty`就代表了“美女”頻道，參數`sn`相當於是頁碼，`0`表示第一頁（共`30`張圖片），`30`表示第二頁，`60`表示第三頁，以此類推。
+
+```
+https://image.so.com/zjl?ch=beauty&sn=0
+```
+
+### 單線程版本
+
+通過上面的 URL 下載“美女”頻道共`90`張圖片。
+
+```Python
+"""
+example04.py - 單線程版本爬蟲
+"""
+import os
+
+import requests
+
+
+def download_picture(url):
+    filename = url[url.rfind('/') + 1:]
+    resp = requests.get(url)
+    if resp.status_code == 200:
+        with open(f'images/beauty/{filename}', 'wb') as file:
+            file.write(resp.content)
+
+
+def main():
+    if not os.path.exists('images/beauty'):
+        os.makedirs('images/beauty')
+    for page in range(3):
+        resp = requests.get(f'https://image.so.com/zjl?ch=beauty&sn={page * 30}')
+        if resp.status_code == 200:
+            pic_dict_list = resp.json()['list']
+            for pic_dict in pic_dict_list:
+                download_picture(pic_dict['qhimg_url'])
+
+if __name__ == '__main__':
+    main()
+```
+
+在 macOS 或 Linux 系統上，我們可以使用`time`命令來了解上面代碼的執行時間以及 CPU 的利用率，如下所示。
+
+```Bash
+time python3 example04.py 
+```
+
+下面是單線程爬蟲代碼在我的電腦上執行的結果。
+
+```
+python3 example04.py  2.36s user 0.39s system 12% cpu 21.578 total
+```
+
+這裡我們只需要關注代碼的總耗時為`21.578`秒，CPU 利用率為`12%`。
+
+### 多線程版本
+
+我們使用之前講到過的線程池技術，將上面的代碼修改為多線程版本。
+
+```Python
+"""
+example05.py - 多線程版本爬蟲
+"""
+import os
+from concurrent.futures import ThreadPoolExecutor
+
+import requests
+
+
+def download_picture(url):
+    filename = url[url.rfind('/') + 1:]
+    resp = requests.get(url)
+    if resp.status_code == 200:
+        with open(f'images/beauty/{filename}', 'wb') as file:
+            file.write(resp.content)
+
+
+def main():
+    if not os.path.exists('images/beauty'):
+        os.makedirs('images/beauty')
+    with ThreadPoolExecutor(max_workers=16) as pool:
+        for page in range(3):
+            resp = requests.get(f'https://image.so.com/zjl?ch=beauty&sn={page * 30}')
+            if resp.status_code == 200:
+                pic_dict_list = resp.json()['list']
+                for pic_dict in pic_dict_list:
+                    pool.submit(download_picture, pic_dict['qhimg_url'])
+
+
+if __name__ == '__main__':
+    main()
+```
+
+執行如下所示的命令。
+
+```Bash
+time python3 example05.py
+```
+
+代碼的執行結果如下所示：
+
+```
+python3 example05.py  2.65s user 0.40s system 95% cpu 3.193 total
+```
+
+### 異步I/O版本
+
+我們使用`aiohttp`將上面的代碼修改為異步 I/O 的版本。為了以異步 I/O 的方式實現網絡資源的獲取和寫文件操作，我們首先得安裝三方庫`aiohttp`和`aiofile`，命令如下所示。
+
+```Bash
+pip install aiohttp aiofile
+```
+
+`aiohttp` 的用法在之前的課程中已經做過簡要介紹，`aiofile`模塊中的`async_open`函數跟 Python 內置函數`open`的用法大致相同，只不過它支持異步操作。下面是異步 I/O 版本的爬蟲代碼。
+
+```Python
+"""
+example06.py - 異步I/O版本爬蟲
+"""
+import asyncio
+import json
+import os
+
+import aiofile
+import aiohttp
+
+
+async def download_picture(session, url):
+    filename = url[url.rfind('/') + 1:]
+    async with session.get(url, ssl=False) as resp:
+        if resp.status == 200:
+            data = await resp.read()
+            async with aiofile.async_open(f'images/beauty/{filename}', 'wb') as file:
+                await file.write(data)
+
+
+async def fetch_json():
+    async with aiohttp.ClientSession() as session:
+        for page in range(3):
+            async with session.get(
+                url=f'https://image.so.com/zjl?ch=beauty&sn={page * 30}',
+                ssl=False
+            ) as resp:
+                if resp.status == 200:
+                    json_str = await resp.text()
+                    result = json.loads(json_str)
+                    for pic_dict in result['list']:
+                        await download_picture(session, pic_dict['qhimg_url'])
+
+
+def main():
+    if not os.path.exists('images/beauty'):
+        os.makedirs('images/beauty')
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(fetch_json())
+    loop.close()
+
+
+if __name__ == '__main__':
+    main()
+```
+
+執行如下所示的命令。
+
+```Bash
+time python3 example06.py
+```
+
+代碼的執行結果如下所示：
+
+```
+python3 example06.py  0.82s user 0.21s system 27% cpu 3.782 total
+```
+
+### 總結
+
+通過上面三段代碼執行結果的比較，我們可以得出一個結論，使用多線程和異步 I/O 都可以改善爬蟲程序的性能，因為我們不用將時間浪費在因 I/O 操作造成的等待和阻塞上，而`time`命令的執行結果也告訴我們，單線程的代碼 CPU 利用率僅僅只有`12%`，而多線程版本的 CPU 利用率則高達`95%`；單線程版本的爬蟲執行時間約`21`秒，而多線程和異步 I/O 的版本僅執行了`3`秒鐘。另外，在運行時間差別不大的情況下，多線程的代碼比異步 I/O 的代碼耗費了更多的 CPU 資源，這是因為多線程的調度和切換也需要花費 CPU 時間。至此，三種方式在 I/O 密集型任務上的優劣已經一目了然，當然這只是在我的電腦上跑出來的結果。如果網絡狀況不是很理想或者目標網站響應很慢，那麼使用多線程和異步 I/O 的優勢將更為明顯，有興趣的讀者可以自行試驗。
