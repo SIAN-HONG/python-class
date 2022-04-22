@@ -1,0 +1,214 @@
+## 第18課：面向對象編程進階
+
+上一節課我們講解了Python面向對象編程的基礎知識，這一節課我們繼續來討論面向對象編程相關的內容。
+
+### 可見性和屬性裝飾器
+
+在很多面向對象編程語言中，對象的屬性通常會被設置為私有（private）或受保護（protected）的成員，簡單的說就是不允許直接訪問這些屬性；對象的方法通常都是公開的（public），因為公開的方法是對象能夠接受的消息，也是對象暴露給外界的調用接口，這就是所謂的訪問可見性。在Python中，可以通過給對象屬性名添加前綴下劃線的方式來說明屬性的訪問可見性，例如，可以用`__name`表示一個私有屬性，`_name`表示一個受保護屬性，代碼如下所示。
+
+```Python
+class Student:
+
+    def __init__(self, name, age):
+        self.__name = name
+        self.__age = age
+
+    def study(self, course_name):
+        print(f'{self.__name}正在學習{course_name}.')
+
+
+stu = Student('王大錘', 20)
+stu.study('Python程序設計')
+print(stu.__name)
+```
+
+上面代碼的最後一行會引發`AttributeError`（屬性錯誤）異常，異常消息為：`'Student' object has no attribute '__name'`。由此可見，以`__`開頭的屬性`__name`是私有的，在類的外面無法直接訪問，但是類裡面的`study`方法中可以通過`self.__name`訪問該屬性。
+
+需要提醒大家的是，Python並沒有從語法上嚴格保證私有屬性的私密性，它只是給私有的屬性和方法換了一個名字來阻撓對它們的訪問，事實上如果你知道更換名字的規則仍然可以訪問到它們，我們可以對上面的代碼稍作修改就可以訪問到私有的屬性。
+
+```Python
+class Student:
+
+    def __init__(self, name, age):
+        self.__name = name
+        self.__age = age
+
+    def study(self, course_name):
+        print(f'{self.__name}正在學習{course_name}.')
+
+
+stu = Student('王大錘', 20)
+stu.study('Python程序設計')
+print(stu._Student__name, stu._Student__age)
+```
+
+Python中有一句名言：“**We are all consenting adults here**”（大家都是成年人）。 Python語言的設計者認為程序員要為自己的行為負責，而不是由Python語言本身來嚴格限制訪問可見性，而大多數的程序員都認為**開放比封閉要好**，把對象的屬性私有化並不是編程語言必須的東西，所以Python並沒有從語法上做出最嚴格的限定。
+
+Python中可以通過`property`裝飾器為“私有”屬性提供讀取和修改的方法，之前我們提到過，裝飾器通常會放在類、函數或方法的聲明之前，通過一個`@`符號表示將裝飾器應用於類、函數或方法。
+
+```Python
+class Student:
+
+    def __init__(self, name, age):
+        self.__name = name
+        self.__age = age
+
+    # 屬性訪問器(getter方法) - 獲取__name屬性
+    @property
+    def name(self):
+        return self.__name
+    
+    # 屬性修改器(setter方法) - 修改__name屬性
+    @name.setter
+    def name(self, name):
+        # 如果name參數不為空就賦值給對象的__name屬性
+        # 否則將__name屬性賦值為'無名氏'，有兩種寫法
+        # self.__name = name if name else '無名氏'
+        self.__name = name or '無名氏'
+    
+    @property
+    def age(self):
+        return self.__age
+
+
+stu = Student('王大錘', 20)
+print(stu.name, stu.age)    # 王大錘 20
+stu.name = ''
+print(stu.name)    # 無名氏
+# stu.age = 30     # AttributeError: can't set attribute
+```
+
+在實際項目開發中，我們並不經常使用私有屬性，屬性裝飾器的使用也比較少，所以上面的知識點大家簡單了解一下就可以了。
+
+### 動態屬性
+
+Python是一門動態語言，維基百科對動態語言的解釋是：“在運行時可以改變其結構的語言，例如新的函數、對象、甚至代碼可以被引進，已有的函數可以被刪除或是其他結構上的變化。動態語言非常靈活，目前流行的Python和JavaScript都是動態語言，除此之外如PHP、Ruby等也都屬於動態語言，而C、C++等語言則不屬於動態語言”。
+
+在Python中，我們可以動態為對象添加屬性，這是Python作為動態類型語言的一項特權，代碼如下所示。需要提醒大家的是，對象的方法其實本質上也是對象的屬性，如果給對象發送一個無法接收的消息，引發的異常仍然是`AttributeError`。
+
+```Python
+class Student:
+
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+
+stu = Student('王大錘', 20)
+# 為Student對象動態添加sex屬性
+stu.sex = '男'
+```
+
+如果不希望在使用對象時動態的為對象添加屬性，可以使用Python的`__slots__`魔法。對於`Student`類來說，可以在類中指定`__slots__ = ('name', 'age')`，這樣`Student`類的對像只能有`name`和`age`屬性，如果想動態添加其他屬性將會引發異常，代碼如下所示。
+
+```Python
+class Student:
+    __slots__ = ('name', 'age')
+
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+
+stu = Student('王大錘', 20)
+# AttributeError: 'Student' object has no attribute 'sex'
+stu.sex = '男'
+```
+
+### 靜態方法和類方法
+
+之前我們在類中定義的方法都是對象方法，換句話說這些方法都是對象可以接收的消息。除了對象方法之外，類中還可以有靜態方法和類方法，這兩類方法是發給類的消息，二者並沒有實質性的區別。在面向對象的世界裡，一切皆為對象，我們定義的每一個類其實也是一個對象，而靜態方法和類方法就是發送給類對象的消息。那麼，什麼樣的消息會直接發送給類對象呢？
+
+舉一個例子，定義一個三角形類，通過傳入三條邊的長度來構造三角形，並提供計算周長和麵積的方法。計算周長和麵積肯定是三角形對象的方法，這一點毫無疑問。但是在創建三角形對象時，傳入的三條邊長未必能構造出三角形，為此我們可以先寫一個方法來驗證給定的三條邊長是否可以構成三角形，這種方法很顯然就不是對象方法，因為在調用這個方法時三角形對像還沒有創建出來。我們可以把這類方法設計為靜態方法或類方法，也就是說這類方法不是發送給三角形對象的消息，而是發送給三角形類的消息，代碼如下所示。
+
+```Python
+class Triangle(object):
+    """三角形類"""
+
+    def __init__(self, a, b, c):
+        """初始化方法"""
+        self.a = a
+        self.b = b
+        self.c = c
+
+    @staticmethod
+    def is_valid(a, b, c):
+        """判斷三條邊長能否構成三角形(靜態方法)"""
+        return a + b > c and b + c > a and a + c > b
+
+    # @classmethod
+    # def is_valid(cls, a, b, c):
+    #     """判斷三條邊長能否構成三角形(類方法)"""
+    #     return a + b > c and b + c > a and a + c > b
+
+    def perimeter(self):
+        """計算周長"""
+        return self.a + self.b + self.c
+
+    def area(self):
+        """計算面積"""
+        p = self.perimeter() / 2
+        return (p * (p - self.a) * (p - self.b) * (p - self.c)) ** 0.5
+```
+
+上面的代碼使用`staticmethod`裝飾器聲明了`is_valid`方法是`Triangle`類的靜態方法，如果要聲明類方法，可以使用`classmethod`裝飾器。可以直接使用`類名.方法名`的方式來調用靜態方法和類方法，二者的區別在於，類方法的第一個參數是類對象本身，而靜態方法則沒有這個參數。簡單的總結一下，**對象方法、類方法、靜態方法都可以通過`類名.方法名`的方式來調用，區別在於方法的第一個參數到底是普通對像還是類對象，還是沒有接受消息的對象**。靜態方法通常也可以直接寫成一個獨立的函數，因為它並沒有跟特定的對象綁定。
+
+### 繼承和多態
+
+面向對象的編程語言支持在已有類的基礎上創建新類，從而減少重複代碼的編寫。提供繼承信息的類叫做父類（超類、基類），得到繼承信息的類叫做子類（派生類、衍生類）。例如，我們定義一個學生類和一個老師類，我們會發現他們有大量的重複代碼，而這些重複代碼都是老師和學生作為人的公共屬性和行為，所以在這種情況下，我們應該先定義人類，再通過繼承，從人類派生出老師類和學生類，代碼如下所示。
+
+```Python
+class Person:
+    """人類"""
+
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+    
+    def eat(self):
+        print(f'{self.name}正在吃飯.')
+    
+    def sleep(self):
+        print(f'{self.name}正在睡覺.')
+
+
+class Student(Person):
+    """學生類"""
+    
+    def __init__(self, name, age):
+        # super(Student, self).__init__(name, age)
+        super().__init__(name, age)
+    
+    def study(self, course_name):
+        print(f'{self.name}正在學習{course_name}.')
+
+
+class Teacher(Person):
+    """老師類"""
+
+    def __init__(self, name, age, title):
+        # super(Teacher, self).__init__(name, age)
+        super().__init__(name, age)
+        self.title = title
+    
+    def teach(self, course_name):
+        print(f'{self.name}{self.title}正在講授{course_name}.')
+
+
+
+stu1 = Student('白元芳', 21)
+stu2 = Student('狄仁傑', 22)
+teacher = Teacher('武則天', 35, '副教授')
+stu1.eat()
+stu2.sleep()
+teacher.teach('Python程序設計')
+stu1.study('Python程序設計')
+```
+
+繼承的語法是在定義類的時候，在類名後的圓括號中指定當前類的父類。如果定義一個類的時候沒有指定它的父類是誰，那麼默認的父類是`object`類。 `object`類是Python中的頂級類，這也就意味著所有的類都是它的子類，要么直接繼承它，要么間接繼承它。 Python語言允許多重繼承，也就是說一個類可以有一個或多個父類，關於多重繼承的問題我們在後面會有更為詳細的討論。在子類的初始化方法中，我們可以通過`super().__init__()`來調用父類初始化方法，`super`函數是Python內置函數中專門為獲取當前對象的父類對象而設計的。從上面的代碼可以看出，子類除了可以通過繼承得到父類提供的屬性和方法外，還可以定義自己特有的屬性和方法，所以子類比父類擁有的更多的能力。在實際開發中，我們經常會用子類對象去替換掉一個父類對象，這是面向對象編程中一個常見的行為，也叫做“里氏替換原則”（Liskov Substitution Principle）。
+
+子類繼承父類的方法後，還可以對方法進行重寫（重新實現該方法），不同的子類可以對父類的同一個方法給出不同的實現版本，這樣的方法在程序運行時就會表現出多態行為（調用相同的方法，做了不同的事情）。多態是面向對象編程中最精髓的部分，當然也是對初學者來說最難以理解和靈活運用的部分，我們會在下一節課中用專門的例子來講解多態這個知識點。
+
+### 簡單的總結
+
+Python是動態語言，Python中的對象可以動態的添加屬性。在面向對象的世界中，**一切皆為對象**，我們定義的類也是對象，所以**類也可以接收消息**，對應的方法是類方法或靜態方法。通過繼承，我們**可以從已有的類創建新類**，實現對已有類代碼的複用。
