@@ -1,0 +1,238 @@
+## 第22課：對象的序列化和反序列化
+
+###JSON概述
+
+通過上面的講解，我們已經知道如何將文本數據和二進制數據保存到文件中，那麼這裡還有一個問題，如果希望把一個列表或者一個字典中的數據保存到文件中又該怎麼做呢？在Python中，我們可以將程序中的數據以JSON格式進行保存。 JSON是“JavaScript Object Notation”的縮寫，它本來是JavaScript語言中創建對象的一種字面量語法，現在已經被廣泛的應用於跨語言跨平台的數據交換。使用JSON的原因非常簡單，因為它結構緊湊而且是純文本，任何操作系統和編程語言都能處理純文本，這就是**實現跨語言跨平台數據交換**的前提條件。目前JSON基本上已經取代了XML（可擴展標記語言）作為**異構系統間交換數據的事實標準**。可以在[JSON的官方網站](https://www.json.org/json-zh.html)找到更多關於JSON的知識，這個網站還提供了每種語言處理JSON數據格式可以使用的工具或三方庫。
+
+```JavaScript
+{
+    name: "駱昊",
+    age: 40,
+    friends: ["王大錘", "白元芳"],
+    cars: [
+        {"brand": "BMW", "max_speed": 240},
+        {"brand": "Benz", "max_speed": 280},
+        {"brand": "Audi", "max_speed": 280}
+    ]
+}
+```
+
+上面是JSON的一個簡單例子，大家可能已經註意到了，它跟Python中的字典非常類似而且支持嵌套結構，就好比Python字典中的值可以是另一個字典。我們可以嘗試把下面的代碼輸入瀏覽器的控制台（對於Chrome瀏覽器，可以通過“更多工具”菜單找到“開發者工具”子菜單，就可以打開瀏覽器的控制台），瀏覽器的控制台提供了一個運行JavaScript代碼的交互式環境（類似於Python的交互式環境），下面的代碼會幫我們創建出一個JavaScript的對象，我們將其賦值給名為`obj`的變量。
+
+```JavaScript
+let obj = {
+    name: "駱昊",
+    age: 40,
+    friends: ["王大錘", "白元芳"],
+    cars: [
+        {"brand": "BMW", "max_speed": 240},
+        {"brand": "Benz", "max_speed": 280},
+        {"brand": "Audi", "max_speed": 280}
+    ]
+}
+```
+
+<img src="https://gitee.com/jackfrued/mypic/raw/master/20210820143803.png" alt="image-20210820143756353" width="80%">
+
+上面的`obj`就是JavaScript中的一個對象，我們可以通過`obj.name`或`obj["name"]`兩種方式獲取到`name`對應的值，如下圖所示。可以注意到，`obj["name"]`這種獲取數據的方式跟Python字典通過鍵獲取值的索引操作是完全一致的，而Python中也通過名為`json`的模塊提供了字典與JSON雙向轉換的支持。
+
+<img src="https://gitee.com/jackfrued/mypic/raw/master/20210820144411.png" width="85%">
+
+我們在JSON中使用的數據類型（JavaScript數據類型）和Python中的數據類型也是很容易找到對應關係的，大家可以看看下面的兩張表。
+
+表1：JavaScript數據類型（值）對應的Python數據類型（值）
+
+| JSON         | Python       |
+| ------------ | ------------ |
+| `object`      |`dict`|
+| `array`      |`list`|
+| `string`     | `str`        |
+| `number ` |`int` / `float`|
+| `number` (real)   |`float`|
+| `boolean` (`true` / `false`) | `bool` (`True` / `False`) |
+| `null`       | `None`       |
+
+表2：Python數據類型（值）對應的JavaScript數據類型（值）
+
+| Python                      | JSON                         |
+| --------------------------- | ---------------------------- |
+| `dict`                      | `object`                     |
+| `list` / `tuple`            | `array`                      |
+| `str`                       | `string`                     |
+| `int` / `float`             | `number`                     |
+| `bool` （`True` / `False`） | `boolean` (`true` / `false`) |
+| `None`                      | `null`                       |
+
+### 讀寫JSON格式的數據
+
+在Python中，如果要將字典處理成JSON格式（以字符串形式存在），可以使用`json`模塊的`dumps`函數，代碼如下所示。
+
+```Python
+import json
+
+my_dict = {
+    'name': '駱昊',
+    'age': 40,
+    'friends': ['王大錘', '白元芳'],
+    'cars': [
+        {'brand': 'BMW', 'max_speed': 240},
+        {'brand': 'Audi', 'max_speed': 280},
+        {'brand': 'Benz', 'max_speed': 280}
+    ]
+}
+print(json.dumps(my_dict))
+```
+
+運行上面的代碼，輸出如下所示，可以注意到中文字符都是用Unicode編碼顯示的。
+
+```JSON
+{"name": "\u9a86\u660a", "age": 40, "friends": ["\u738b\u5927\u9524", "\u767d\u5143\u82b3"], "cars": [{"brand": "BMW", "max_speed": 240}, {"brand": "Audi", "max_speed": 280}, {"brand": "Benz", "max_speed": 280}]}
+```
+
+如果要將字典處理成JSON格式並寫入文本文件，只需要將`dumps`函數換成`dump`函數並傳入文件對象即可，代碼如下所示。
+
+```Python
+import json
+
+my_dict = {
+    'name': '駱昊',
+    'age': 40,
+    'friends': ['王大錘', '白元芳'],
+    'cars': [
+        {'brand': 'BMW', 'max_speed': 240},
+        {'brand': 'Audi', 'max_speed': 280},
+        {'brand': 'Benz', 'max_speed': 280}
+    ]
+}
+with open('data.json', 'w') as file:
+    json.dump(my_dict, file)
+```
+
+執行上面的代碼，會創建`data.json`文件，文件的內容跟上面代碼的輸出是一樣的。
+
+`json`模塊有四個比較重要的函數，分別是：
+
+- `dump` - 將Python對象按照JSON格式序列化到文件中
+- `dumps` - 將Python對象處理成JSON格式的字符串
+- `load` - 將文件中的JSON數據反序列化成對象
+- `loads` - 將字符串的內容反序列化成Python對象
+
+這裡出現了兩個概念，一個叫序列化，一個叫反序列化，[維基百科](https://zh.wikipedia.org/)上的解釋是：“序列化（serialization）在計算機科學的數據處理中，是指將數據結構或對象狀態轉換為可以存儲或傳輸的形式，這樣在需要的時候能夠恢復到原先的狀態，而且通過序列化的數據重新獲取字節時，可以利用這些字節來產生原始對象的副本（拷貝）。與這個過程相反的動作，即從一系列字節中提取數據結構的操作，就是反序列化（deserialization）”。
+
+我們可以通過下面的代碼，讀取上面創建的`data.json`文件，將JSON格式的數據還原成Python中的字典。
+
+```Python
+import json
+
+with open('data.json', 'r') as file:
+    my_dict = json.load(file)
+    print(type(my_dict))
+    print(my_dict)
+```
+
+### 包管理工具pip的使用
+
+Python標準庫中的`json`模塊在數據序列化和反序列化時性能並不是非常理想，為了解決這個問題，可以使用三方庫`ujson`來替換`json`。所謂三方庫，是指非公司內部開發和使用的，也不是來自於官方標準庫的Python模塊，這些模塊通常由其他公司、組織或個人開發，所以被稱為三方庫。雖然Python語言的標準庫雖然已經提供了諸多模塊來方便我們的開發，但是對於一個強大的語言來說，它的生態圈一定也是非常繁榮的。
+
+之前安裝Python解釋器時，默認情況下已經勾選了安裝pip，大家可以在命令提示符或終端中通過`pip --version`來確定是否已經擁有了pip。 pip是Python的包管理工具，通過pip可以查找、安裝、卸載、更新Python的三方庫或工具，macOS和Linux系統應該使用pip3。例如要安裝替代`json`模塊的`ujson`，可以使用下面的命令。
+
+```Bash
+pip install ujson
+```
+
+在默認情況下，pip會訪問`https://pypi.org/simple/`來獲得三方庫相關的數據，但是國內訪問這個網站的速度並不是十分理想，因此國內用戶可以使用豆瓣網提供的鏡像來替代這個默認的下載源，操作如下所示。
+
+```Bash
+pip install ujson
+```
+
+可以通過`pip search`命令根據名字查找需要的三方庫，可以通過`pip list`命令來查看已經安裝過的三方庫。如果想更新某個三方庫，可以使用`pip install -U`或`pip install --upgrade`；如果要刪除某個三方庫，可以使用`pip uninstall`命令。
+
+搜索`ujson`三方庫。
+
+```Bash
+pip search ujson
+
+micropython-cpython-ujson (0.2)  - MicroPython moduleujson ported to CPython
+pycopy-cpython-ujson (0.2)       - Pycopy module ujson ported to CPython
+ujson (3.0.0)                    - Ultra fast JSON encoder and decoder for Python
+ujson-bedframe (1.33.0)          - Ultra fast JSON encoder and decoder for Python
+ujson-segfault (2.1.57)          - Ultra fast JSON encoder and decoder for Python. Continuing 
+                                   development.
+ujson-ia (2.1.1)                 - Ultra fast JSON encoder and decoder for Python (Internet 
+                                   Archive fork)
+ujson-x (1.37)                   - Ultra fast JSON encoder and decoder for Python
+ujson-x-legacy (1.35.1)          - Ultra fast JSON encoder and decoder for Python
+drf_ujson (1.2)                  - Django Rest Framework UJSON Renderer
+drf-ujson2 (1.6.1)               - Django Rest Framework UJSON Renderer
+ujsonDB (0.1.0)                  - A lightweight and simple database using ujson.
+fast-json (0.3.2)                - Combines best parts of json and ujson for fast serialization
+decimal-monkeypatch (0.4.3)      - Python 2 performance patches: decimal to cdecimal, json to 
+                                   ujson for psycopg2
+```
+
+查看已經安裝的三方庫。
+
+```Bash
+pip list
+
+Package                       Version
+----------------------------- ----------
+aiohttp                       3.5.4
+alipay                        0.7.4
+altgraph                      0.16.1
+amqp                          2.4.2
+...							  ...
+```
+
+更新`ujson`三方庫。
+
+```Bash
+pip install -U ujson
+```
+
+刪除`ujson`三方庫。
+
+```Bash
+pip uninstall -y ujson
+```
+
+> **提示**：如果要更新`pip`自身，對於macOS系統來說，可以使用命令`pip install -U pip`。在Windows系統上，可以將命令替換為`python -m pip install -U --user pip`。
+
+### 使用網絡API獲取數據
+
+如果想在我們自己的程序中顯示天氣、路況、航班等信息，這些信息我們自己沒有能力提供，所以必須使用網絡數據服務。目前絕大多數的網絡數據服務（或稱之為網絡API）都是基於[HTTP](https://zh.wikipedia.org/wiki/%E8%B6%85%E6%96%87%E6%9C%AC%E4%BC%A0%E8%BE%93%E5%8D%8F%E8%AE%AE)或HTTPS提供JSON格式的數據，我們可以通過Python程序發送HTTP請求給指定的URL（統一資源定位符），這個URL就是所謂的網絡API，如果請求成功，它會返回HTTP響應，而HTTP響應的消息體中就有我們需要的JSON格式的數據。關於HTTP的相關知識，可以看看阮一峰的[《HTTP協議入門》](http://www.ruanyifeng.com/blog/2016/08/http.html)一文。
+
+國內有很多提供網絡API接口的網站，例如[聚合數據](https://www.juhe.cn/)、[阿凡達數據](http://www.avatardata.cn/)等，這些網站上有免費的和付費的數據接口，國外的[{API}Search](http://apis.io/)網站也提供了類似的功能，有興趣的可以自行研究。下面的例子演示瞭如何使用[`requests`](http://docs.python-requests.org/zh_CN/latest/)庫（基於HTTP進行網絡資源訪問的三方庫）訪問網絡API獲取國內新聞並顯示新聞標題和鏈接。在這個例子中，我們使用了名為[天行數據](https://www.tianapi.com/)的網站提供的國內新聞數據接口，其中的APIKey需要自己到網站上註冊申請。在天行數據網站註冊賬號後會自動分配APIKey，但是要訪問接口獲取數據，需要綁定驗證郵箱或手機，然後還要申請需要使用的接口，如下圖所示。
+
+<img src="https://gitee.com/jackfrued/mypic/raw/master/20210820151134.png" alt="image-20210820151134034" width="100%">
+
+Python通過URL接入網絡，我們推薦大家使用`requests`三方庫，它簡單且強大，但需要自行安裝。
+
+```Bash
+pip install requests
+```
+
+獲取國內新聞並顯示新聞標題和鏈接。
+
+```Python
+import requests
+
+resp = requests.get('http://api.tianapi.com/guonei/?key=APIKey&num=10')
+if resp.status_code == 200:
+    data_model = resp.json()
+    for news in data_model['newslist']:
+        print(news['title'])
+        print(news['url'])
+        print('-' * 60)
+```
+
+上面的代碼通過`requests`模塊的`get`函數向天行數據的國內新聞接口發起了一次請求，如果請求過程沒有出現問題，`get`函數會返回一個`Response`對象，通過該對象的`status_code`屬性表示HTTP響應狀態碼，如果不理解沒關係，你只需要關注它的值，如果值等於`200`或者其他`2`字頭的值，那麼我們的請求是成功的。通過`Response`對象的`json()`方法可以將返回的JSON格式的數據直接處理成Python字典，非常方便。天行數據國內新聞接口返回的JSON格式的數據（部分）如下圖所示。
+
+<img src="https://gitee.com/jackfrued/mypic/raw/master/20210820154455.png" width="100%">
+
+> **提示**：上面代碼中的APIKey需要換成自己在天行數據網站申請的APIKey。天行數據網站上還有提供了很多非常有意思的API接口，例如：垃圾分類、周公解夢等，大家可以仿照上面的代碼來調用這些接口。每個接口都有對應的接口文檔，文檔中有關於如何使用接口的詳細說明。
+
+###  簡單的總結
+
+Python中實現序列化和反序列化除了使用`json`模塊之外，還可以使用`pickle`和`shelve`模塊，但是這兩個模塊是使用特有的序列化協議來序列化數據，因此序列化後的數據只能被Python識別，關於這兩個模塊的相關知識，有興趣的讀者可以自己查找網絡上的資料。處理JSON格式的數據很顯然是程序員必須掌握的一項技能，因為不管是訪問網絡API接口還是提供網絡API接口給他人使用，都需要具備處理JSON格式數據的相關知識。
