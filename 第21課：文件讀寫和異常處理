@@ -1,0 +1,244 @@
+## 第21課：文件讀寫和異常處理
+
+實際開發中常常會遇到對數據進行持久化的場景，所謂持久化是指將數據從無法長久保存數據的存儲介質（通常是內存）轉移到可以長久保存數據的存儲介質（通常是硬盤）中。實現數據持久化最直接簡單的方式就是通過**文件系統**將數據保存到**文件**中。
+
+計算機的**文件系統**是一種存儲和組織計算機數據的方法，它使得對數據的訪問和查找變得容易，文件系統使用**文件**和**樹形目錄**的抽象邏輯概念代替了硬盤、光盤、閃存等物理設備的數據塊概念，用戶使用文件系統來保存數據時，不必關心數據實際保存在硬盤的哪個數據塊上，只需要記住這個文件的路徑和文件名。在寫入新數據之前，用戶不必關心硬盤上的哪個數據塊沒有被使用，硬盤上的存儲空間管理（分配和釋放）功能由文件系統自動完成，用戶只需要記住數據被寫入到了哪個文件中。
+
+### 打開和關閉文件
+
+有了文件系統，我們可以非常方便的通過文件來讀寫數據；在Python中要實現文件操作是非常簡單的。我們可以使用Python內置的`open`函數來打開文件，在使用`open`函數時，我們可以通過函數的參數指定**文件名**、**操作模式**和**字符編碼**等信息，接下來就可以對文件進行讀寫操作了。這裡所說的操作模式是指要打開什麼樣的文件（字符文件或二進製文件）以及做什麼樣的操作（讀、寫或追加），具體如下表所示。
+
+| 操作模式 | 具體含義                         |
+| -------- | -------------------------------- |
+| `'r'`    | 讀取 （默認）                    |
+| `'w'`    | 寫入（會先截斷之前的內容）       |
+| `'x'`    | 寫入，如果文件已經存在會產生異常 |
+| `'a'`    | 追加，將內容寫入到已有文件的末尾 |
+| `'b'`    | 二進制模式                       |
+| `'t'`    | 文本模式（默認）                 |
+| `'+'`    | 更新（既可以讀又可以寫）         |
+
+下圖展示瞭如何根據程序的需要來設置`open`函數的操作模式。
+
+<img src="https://gitee.com/jackfrued/mypic/raw/master/20210803201644.png" width="75%">
+
+在使用`open`函數時，如果打開的文件是字符文件（文本文件），可以通過`encoding`參數來指定讀寫文件使用的字符編碼。如果對字符編碼和字符集這些概念不了解，可以看看[《字符集和字符編碼》](https://www.cnblogs.com/skynet/archive/2011/05/03/2035105.html)一文，此處不再進行贅述。
+
+使用`open`函數打開文件成功後會返回一個文件對象，通過這個對象，我們就可以實現對文件的讀寫操作；如果打開文件失敗，`open`函數會引發異常，稍後會對此加以說明。如果要關閉打開的文件，可以使用文件對象的`close`方法，這樣可以在結束文件操作時釋放掉這個文件。
+
+### 讀寫文本文件
+
+用`open`函數打開文本文件時，需要指定文件名並將文件的操作模式設置為`'r'`，如果不指定，默認值也是`'r'`；如果需要指定字符編碼，可以傳入`encoding`參數，如果不指定，默認值是None，那麼在讀取文件時使用的是操作系統默認的編碼。需要提醒大家，如果不能保證保存文件時使用的編碼方式與`encoding`參數指定的編碼方式是一致的，那麼就可能因無法解碼字符而導致讀取文件失敗。
+
+下面的例子演示瞭如何讀取一個純文本文件（一般指只有字符原生編碼構成的文件，與富文本相比，純文本不包含字符樣式的控制元素，能夠被最簡單的文本編輯器直接讀取）。
+
+```Python
+file = open('致橡樹.txt', 'r', encoding='utf-8')
+print(file.read())
+file.close()
+```
+
+> **說明**：[《致橡樹》](http://www.china.org.cn/learning_english/2011-02/21/content_21967654.htm)是舒婷老師在1977年3月創建的愛情詩，也是我最喜歡的現代詩之一。
+
+除了使用文件對象的`read`方法讀取文件之外，還可以使用`for-in`循環逐行讀取或者用`readlines`方法將文件按行讀取到一個列表容器中，代碼如下所示。
+
+```Python
+file = open('致橡樹.txt', 'r', encoding='utf-8')
+for line in file:
+    print(line, end='')
+file.close()
+
+file = open('致橡樹.txt', 'r', encoding='utf-8')
+lines = file.readlines()
+for line in lines:
+    print(line, end='')
+file.close()
+```
+
+如果要向文件中寫入內容，可以在打開文件時使用`w`或者`a`作為操作模式，前者會截斷之前的文本內容寫入新的內容，後者是在原來內容的尾部追加新的內容。
+
+```Python
+file = open('致橡樹.txt', 'a', encoding='utf-8')
+file.write('\n標題：《致橡樹》')
+file.write('\n作者：舒婷')
+file.write('\n時間：1977年3月')
+file.close()
+```
+
+### 異常處理機制
+
+請注意上面的代碼，如果`open`函數指定的文件並不存在或者無法打開，那麼將引發異常狀況導致程序崩潰。為了讓代碼具有健壯性和容錯性，我們可以**使用Python的異常機制對可能在運行時發生狀況的代碼進行適當的處理**。 Python中和異常相關的關鍵字有五個，分別是`try`、`except`、`else`、`finally`和`raise`，我們先看看下面的代碼，再來為大家介紹這些關鍵字的用法。
+
+```Python
+file = None
+try:
+    file = open('致橡樹.txt', 'r', encoding='utf-8')
+    print(file.read())
+except FileNotFoundError:
+    print('無法打開指定的文件!')
+except LookupError:
+    print('指定了未知的編碼!')
+except UnicodeDecodeError:
+    print('讀取文件時解碼錯誤!')
+finally:
+    if file:
+        file.close()
+```
+
+在Python中，我們可以將運行時會出現狀況的代碼放在`try`代碼塊中，在`try`後面可以跟上一個或多個`except`塊來捕獲異常並進行相應的處理。例如，在上面的代碼中，文件找不到會引發`FileNotFoundError`，指定了未知的編碼會引發`LookupError`，而如果讀取文件時無法按指定編碼方式解碼文件會引發`UnicodeDecodeError`，所以我們在`try`後面跟上了三個`except`分別處理這三種不同的異常狀況。在`except`後面，我們還可以加上`else`代碼塊，這是`try` 中的代碼沒有出現異常時會執行的代碼，而且`else`中的代碼不會再進行異常捕獲，也就是說如果遇到異常狀況，程序會因異常而終止並報告異常信息。最後我們使用`finally`代碼塊來關閉打開的文件，釋放掉程序中獲取的外部資源。由於`finally`塊的代碼不論程序正常還是異常都會執行，甚至是調用了`sys`模塊的`exit`函數終止Python程序，`finally`塊中的代碼仍然會被執行（因為`exit`函數的本質是引發了`SystemExit`異常），因此我們把`finally`代碼塊稱為“總是執行代碼塊”，它最適合用來做釋放外部資源的操作。
+
+Python中內置了大量的異常類型，除了上面代碼中用到的異常類型以及之前的課程中遇到過的異常類型外，還有許多的異常類型，其繼承結構如下所示。
+
+```
+BaseException
+ +-- SystemExit
+ +-- KeyboardInterrupt
+ +-- GeneratorExit
+ +-- Exception
+      +-- StopIteration
+      +-- StopAsyncIteration
+      +-- ArithmeticError
+      |    +-- FloatingPointError
+      |    +-- OverflowError
+      |    +-- ZeroDivisionError
+      +-- AssertionError
+      +-- AttributeError
+      +-- BufferError
+      +-- EOFError
+      +-- ImportError
+      |    +-- ModuleNotFoundError
+      +-- LookupError
+      |    +-- IndexError
+      |    +-- KeyError
+      +-- MemoryError
+      +-- NameError
+      |    +-- UnboundLocalError
+      +-- OSError
+      |    +-- BlockingIOError
+      |    +-- ChildProcessError
+      |    +-- ConnectionError
+      |    |    +-- BrokenPipeError
+      |    |    +-- ConnectionAbortedError
+      |    |    +-- ConnectionRefusedError
+      |    |    +-- ConnectionResetError
+      |    +-- FileExistsError
+      |    +-- FileNotFoundError
+      |    +-- InterruptedError
+      |    +-- IsADirectoryError
+      |    +-- NotADirectoryError
+      |    +-- PermissionError
+      |    +-- ProcessLookupError
+      |    +-- TimeoutError
+      +-- ReferenceError
+      +-- RuntimeError
+      |    +-- NotImplementedError
+      |    +-- RecursionError
+      +-- SyntaxError
+      |    +-- IndentationError
+      |         +-- TabError
+      +-- SystemError
+      +-- TypeError
+      +-- ValueError
+      |    +-- UnicodeError
+      |         +-- UnicodeDecodeError
+      |         +-- UnicodeEncodeError
+      |         +-- UnicodeTranslateError
+      +-- Warning
+           +-- DeprecationWarning
+           +-- PendingDeprecationWarning
+           +-- RuntimeWarning
+           +-- SyntaxWarning
+           +-- UserWarning
+           +-- FutureWarning
+           +-- ImportWarning
+           +-- UnicodeWarning
+           +-- BytesWarning
+           +-- ResourceWarning
+```
+
+從上面的繼承結構可以看出，Python中所有的異常都是`BaseException`的子類型，它有四個直接的子類，分別是：`SystemExit`、`KeyboardInterrupt`、`GeneratorExit`和`Exception`。其中，`SystemExit`表示解釋器請求退出，`KeyboardInterrupt`是用戶中斷程序執行（按下`Ctrl+c`），`GeneratorExit`表示生成器發生異常通知退出，不理解這些異常沒有關係，繼續學習就好了。值得一提的是`Exception`類，它是常規異常類型的父類型，很多的異常都是直接或間接的繼承自`Exception`類。如果Python內置的異常類型不能滿足應用程序的需要，我們可以自定義異常類型，而自定義的異常類型也應該直接或間接繼承自`Exception`類，當然還可以根據需要重寫或添加方法。
+
+在Python中，可以使用`raise`關鍵字來引發異常（拋出異常對象），而調用者可以通過`try...except...`結構來捕獲並處理異常。例如在函數中，當函數的執行條件不滿足時，可以使用拋出異常的方式來告知調用者問題的所在，而調用者可以通過捕獲處理異常來使得代碼從異常中恢復，定義異常和拋出異常的代碼如下所示。
+
+```Python
+class InputError(ValueError):
+    """自定義異常類型"""
+    pass
+
+
+def fac(num):
+    """求階乘"""
+    if num < 0:
+        raise InputError('只能計算非負整數的階乘')
+    if num in (0, 1):
+        return 1
+    return num * fac(num - 1)
+```
+
+調用求階乘的函數`fac`，通過`try...except...`結構捕獲輸入錯誤的異常並打印異常對象（顯示異常信息），如果輸入正確就計算階乘並結束程序。
+
+```Python
+flag = True
+while flag:
+    num = int(input('n = '))
+    try:
+        print(f'{num}! = {fac(num)}')
+        flag = False
+    except InputError as err:
+        print(err)
+```
+
+### 上下文語法
+
+對於`open`函數返回的文件對象，還可以使用`with`上下文語法在文件操作完成後自動執行文件對象的`close`方法，這樣可以讓代碼變得更加簡單優雅，因為不需要再寫`finally`代碼塊來執行關閉文件釋放資源的操作。需要提醒大家的是，並不是所有的對像都可以放在`with`上下文語法中，只有符合**上下文管理器協議**（有`__enter__`和`__exit__`魔術方法）的對象才能使用這種語法，Python標準庫中的`contextlib`模塊也提供了對`with`上下文語法的支持，後面再為大家進行講解。
+
+用`with`上下文語法改寫後的代碼如下所示。
+
+```Python
+try:
+    with open('致橡樹.txt', 'r', encoding='utf-8') as file:
+        print(file.read())
+except FileNotFoundError:
+    print('無法打開指定的文件!')
+except LookupError:
+    print('指定了未知的編碼!')
+except UnicodeDecodeError:
+    print('讀取文件時解碼錯誤!')
+```
+
+### 讀寫二進製文件
+
+讀寫二進製文件跟讀寫文本文件的操作類似，但是需要注意，在使用`open`函數打開文件時，如果要進行讀操作，操作模式是`'rb'`，如果要進行寫操作，操作模式是`'wb'`。還有一點，讀寫文本文件時，`read`方法的返回值以及`write`方法的參數是`str`對象（字符串），而讀寫二進製文件時，`read`方法的返回值以及`write`方法的參數是`bytes-like`對象（字節串）。下面的代碼實現了將當前路徑下名為`guido.jpg`的圖片文件複製到`吉多.jpg`文件中的操作。
+
+```Python
+try:
+    with open('guido.jpg', 'rb') as file1:
+        data = file1.read()
+    with open('吉多.jpg', 'wb') as file2:
+        file2.write(data)
+except FileNotFoundError:
+    print('指定的文件無法打開.')
+except IOError:
+    print('讀寫文件時出現錯誤.')
+print('程序執行結束.')
+```
+
+如果要復制的圖片文件很大，一次將文件內容直接讀入內存中可能會造成非常大的內存開銷，為了減少對內存的佔用，可以為`read`方法傳入`size`參數來指定每次讀取的字節數，通過循環讀取和寫入的方式來完成上面的操作，代碼如下所示。
+
+```Python
+try:
+    with open('guido.jpg', 'rb') as file1, open('吉多.jpg', 'wb') as file2:
+        data = file1.read(512)
+        while data:
+            file2.write(data)
+            data = file1.read()
+except FileNotFoundError:
+    print('指定的文件無法打開.')
+except IOError:
+    print('讀寫文件時出現錯誤.')
+print('程序執行結束.')
+```
+
+###  簡單的總結
+
+通過讀寫文件的操作，我們可以實現數據持久化。在Python中可以通過`open`函數來獲得文件對象，可以通過文件對象的`read`和`write`方法實現文件讀寫操作。程序在運行時可能遭遇無法預料的異常狀況，可以使用Python的異常機制來處理這些狀況。 Python的異常機制主要包括`try`、`except`、`else`、`finally`和`raise`這五個核心關鍵字。 `try`後面的`except`語句不是必須的，`finally`語句也不是必須的，但是二者必須要有一個；`except`語句可以有一個或多個，多個`except`會按照書寫的順序依次匹配指定的異常，如果異常已經處理就不會再進入後續的`except`語句；`except`語句中還可以通過元組同時指定多個異常類型進行捕獲；`except`語句後面如果不指定異常類型，則默認捕獲所有異常；捕獲異常後可以使用`raise`要再次拋出，但是不建議捕獲並拋出同一個異常；不建議在不清楚邏輯的情況下捕獲所有異常，這可能會掩蓋程序中嚴重的問題。最後強調一點，**不要使用異常機制來處理正常業務邏輯或控製程序流程**，簡單的說就是不要濫用異常機制，這是初學者常犯的錯誤。
