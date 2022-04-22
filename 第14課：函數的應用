@@ -1,0 +1,162 @@
+## 第14課：函數的應用
+
+接下來我們通過一些案例來為大家講解函數的應用。
+
+### 經典小案例
+
+#### 案例1：設計一個生成驗證碼的函數。
+
+> **說明**：驗證碼由數字和英文大小寫字母構成，長度可以用參數指定。
+
+```Python
+import random
+import string
+
+ALL_CHARS = string.digits + string.ascii_letters
+
+
+def generate_code(code_len=4):
+    """生成指定長度的驗證碼
+    
+    :param code_len: 驗證碼的長度(默認4個字符)
+    :return: 由大小寫英文字母和數字構成的隨機驗證碼字符串
+    """
+    return ''.join(random.choices(ALL_CHARS, k=code_len))
+```
+
+可以用下面的代碼生成10組隨機驗證碼來測試上面的函數。
+
+```Python
+for _ in range(10):
+    print(generate_code()) 
+```
+
+> **說明**：`random`模塊的`sample`和`choices`函數都可以實現隨機抽樣，`sample`實現無放回抽樣，這意味著抽樣取出的字符是不重複的；`choices`實現有放回抽樣，這意味著可能會重複選中某些字符。這兩個函數的第一個參數代表抽樣的總體，而參數`k`代表抽樣的數量。
+
+#### 案例2：設計一個函數返回給定文件的後綴名。
+
+> **說明**：文件名通常是一個字符串，而文件的後綴名指的是文件名中最後一個`.`後面的部分，也稱為文件的擴展名，它是某些操作系統用來標記文件類型的一種機制，例如在Windows系統上，後綴名`exe`表示這是一個可執行程序，而後綴名`txt`表示這是一個純文本文件。需要注意的是，在Linux和macOS系統上，文件名可以以`.`開頭，表示這是一個隱藏文件，像`.gitignore`這樣的文件名，`.`後面並不是後綴名，這個文件沒有後綴名或者說後綴名為`''`。
+
+```Python
+def get_suffix(filename, ignore_dot=True):
+    """獲取文件名的後綴名
+    
+    :param filename: 文件名
+    :param ignore_dot: 是否忽略後綴名前面的點
+    :return: 文件的後綴名
+    """
+    # 從字符串中逆向查找.出現的位置
+    pos = filename.rfind('.')
+    # 通過切片操作從文件名中取出後綴名
+    if pos <= 0:
+        return ''
+    return filename[pos + 1:] if ignore_dot else filename[pos:]
+```
+
+可以用下面的代碼對上面的函數做一個簡單的測驗。
+
+```Python
+print(get_suffix('readme.txt'))       # txt
+print(get_suffix('readme.txt.md'))    # md
+print(get_suffix('.readme'))          #
+print(get_suffix('readme.'))          #
+print(get_suffix('readme'))           #
+```
+
+上面的`get_suffix`函數還有一個更為便捷的實現方式，就是直接使用`os.path`模塊的`splitext`函數，這個函數會將文件名拆分成帶路徑的文件名和擴展名兩個部分，然後返回一個二元組，二元組中的第二個元素就是文件的後綴名（包含`.`），如果要去掉後綴名中的`.`，可以做一個字符串的切片操作，代碼如下所示。
+
+```Python
+from os.path import splitext
+
+
+def get_suffix(filename, ignore_dot=True):
+    return splitext(filename)[1][1:]
+```
+
+> **思考**：如果要給上面的函數增加一個參數，用來控製文件的後綴名是否包含`.`，應該怎麼做？
+
+#### 案例3：寫一個判斷給定的正整數是不是質數的函數。
+
+```Python
+def is_prime(num: int) -> bool:
+    """判斷一個正整數是不是質數
+
+    :param num: 正整數
+    :return: 如果是質數返回True，否則返回False
+    """
+    for i in range(2, int(num ** 0.5) + 1):
+        if num % i == 0:
+            return False
+    return num != 1
+```
+
+#### 案例4：寫出計算兩個正整數最大公約數和最小公倍數的函數。
+
+代碼一：
+
+```Python
+def gcd_and_lcm(x: int, y: int) -> int:
+    """求最大公約數和最小公倍數"""
+    a, b = x, y
+    while b % a != 0:
+        a, b = b % a, a
+    return a, x * y // a
+```
+
+代碼二：
+
+```Python
+def gcd(x: int, y: int) -> int:
+    """求最大公約數"""
+    while y % x != 0:
+        x, y = y % x, x
+    return x
+
+
+def lcm(x: int, y: int) -> int:
+    """求最小公倍數"""
+    return x * y // gcd(x, y)
+```
+
+> **思考**：請比較上面的代碼一和代碼二，想想哪種做法是更好的選擇。
+
+#### 案例5：寫出計算一組樣本數據描述性統計信息的函數。
+
+```Python
+import math
+
+
+def ptp(data):
+    """求極差（全距）"""
+    return max(data) - min(data)
+
+
+def average(data):
+    """求均值"""
+    return sum(data) / len(data)
+
+
+def variance(data):
+    """求方差"""
+    x_bar = average(data)
+    temp = [(num - x_bar) ** 2 for num in data]
+    return sum(temp) / (len(temp) - 1)
+
+
+def standard_deviation(data):
+    """求標準差"""
+    return math.sqrt(variance(data))
+
+
+def median(data):
+    """找中位數"""
+    temp, size = sorted(data), len(data)
+    if size % 2 != 0:
+        return temp[size // 2]
+    else:
+        return average(temp[size // 2 - 1:size // 2 + 1])
+```
+
+### 簡單的總結
+
+在寫代碼尤其是開發商業項目的時候，一定要有意識的**將相對獨立且重複出現的功能封裝成函數**，這樣不管是自己還是團隊的其他成員都可以通過調用函數的方式來使用這些功能。
