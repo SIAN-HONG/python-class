@@ -1,0 +1,2 @@
+網路爬蟲(web crawler)其實是一個程式，也稱網路蜘蛛(spider)，有時也稱網路機器人(robot)。主要是透過URL(Uniform Resource Locator)遵循一定規則下，抓取網路資訊。
+在這裡使用python撰寫網路爬蟲，其實也可以使用其他語言撰寫網路爬蟲，例如:java可以使用WedMagin爬蟲框架、C#可以使用DotnetSpider爬蟲框架。
