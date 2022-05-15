@@ -1,2 +1,13 @@
+## 網路爬蟲概論
+
 網路爬蟲(web crawler)其實是一個程式，也稱網路蜘蛛(spider)，有時也稱網路機器人(robot)。主要是透過URL(Uniform Resource Locator)遵循一定規則下，抓取網路資訊。
 在這裡使用python撰寫網路爬蟲，其實也可以使用其他語言撰寫網路爬蟲，例如:java可以使用WedMagin爬蟲框架、C#可以使用DotnetSpider爬蟲框架。
+
+### 認識HTML
+HTML的英文全名是HyperText Markup Language是一種標籤(Tag)語言，每一個標籤都是一個指令，將一系列的標籤組起來就可以用於網頁設計，也就是我們使用看到的瀏覽器。
+
+### 網路地址URL
+我們使用瀏覽器瀏覽網頁時，需要在瀏覽器的網址欄未輸入網址，這個網址我們稱為URL(Uniform Resource Locator)，我們可以將這個URL想成Internet地址，就好像我們家的地址。
+每個URL所包含的內容就是由HTML文件建立的網頁內容
+
+### 爬蟲類型
