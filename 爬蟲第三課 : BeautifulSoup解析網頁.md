@@ -85,8 +85,10 @@ print("title.string內容 = ", objSoup.title.string)
 ```
 <img width="476" alt="image" src="https://user-images.githubusercontent.com/27804948/169685439-7b80fe6c-a3af-48f1-b7f4-33e529acdfb2.png">
 ### 尋找符合的標籤  
+
 #### 尋找第一個標籤find()
-這個函數可以找到第一個符合的標籤，例如find('h1')是要找第一個h1的標籤。如果有找到就回傳標籤字串，如果沒有回傳None。
+這個函數可以找到第一個符合的標籤，例如find('h1')是要找第一個h1的標籤。如果有找到就回傳標籤字串，如果沒有回傳None。  
+
 ```Python
 import bs4
 
@@ -100,6 +102,7 @@ print("屬性內容   = ", objTag.text)
 # 列印Tag        =  <h1 id="author">黃献竤</h1>
 # 屬性內容   =  黃献竤
 ```
+
 ##### 尋找全部標籤find_all()
 這個函數可以找到全部符合的標籤，例如find_all('h1')是要找全部h1的標籤。如果有找到就回傳標籤串列(list)，如果沒有回傳空串列。
 ```Python
