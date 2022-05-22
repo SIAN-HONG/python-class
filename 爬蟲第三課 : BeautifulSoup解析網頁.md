@@ -84,9 +84,10 @@ print("title.string內容 = ", objSoup.title.string)
 # title.string內容 =  黃献竤介紹
 ```
 <img width="476" alt="image" src="https://user-images.githubusercontent.com/27804948/169685439-7b80fe6c-a3af-48f1-b7f4-33e529acdfb2.png">
-### 尋找符合的標籤  
+#### 尋找符合的標籤  
 
-#### 尋找第一個標籤find()
+
+##### 尋找第一個標籤find()
 這個函數可以找到第一個符合的標籤，例如find('h1')是要找第一個h1的標籤。如果有找到就回傳標籤字串，如果沒有回傳None。  
 
 ```Python
