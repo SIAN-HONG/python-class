@@ -4,12 +4,7 @@
 先尋找class是'contents_box02'，因為我們在網頁中找到這裡紀錄威力彩結果。
 <img width="742" alt="image" src="https://user-images.githubusercontent.com/27804948/169689438-456ed8b9-8da2-4ef5-839a-d432053f8ddf.png">
 
-```
-pip install beautfulsoup4
-```
-在Python導入模組時是用以下方式導入:
 ```Python
-# ch5_16.py
 import bs4, requests
 
 url = 'http://www.taiwanlottery.com.tw'
