@@ -167,7 +167,7 @@ for tag in objTag:
 # Line
 ```
 ### select()
-
+select()主要是以CCS選擇器(selector)的觀念尋找元素，如果找到回傳的是串列(list)，select()特色是一次可以找尋所有相符的元素，如果找不到回傳空串列，下列是使用實例:
 objSoup.select ('p')：找尋所有\<p\>標籤的元素。  
 objSoup.select ('img')：找尋所有\<img\>標籤的元素。  
 objSoup.select ('.happy')：找尋所有CSS class屬性為happy的元素。  
