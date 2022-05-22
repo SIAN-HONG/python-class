@@ -57,8 +57,9 @@ print("列印BeautifulSoup物件資料型態 ", type(objSoup))
 <img width="375" alt="image" src="https://user-images.githubusercontent.com/27804948/169684846-3a72612e-9acf-40a9-8442-6419c5ab4e43.png">
 
 #### 網頁屬性
-Beautiful物件的title屬性可以傳回網頁標題的<title>標籤內容。
-```Python
+
+Beautiful物件的title屬性可以傳回網頁標題的<title>標籤內容
+``` Python
 import bs4
 
 response = open('myhtml.html', encoding='utf-8')
@@ -68,3 +69,4 @@ print("列印title = ", objSoup.title)
 # 物件類型  =  <class 'bs4.element.Tag'>
 # 列印title =  <title>黃献竤介紹</title>
 ```
+
