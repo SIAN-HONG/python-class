@@ -167,7 +167,7 @@ for tag in objTag:
 # Line
 ```
 ### select()
-select()主要是以CCS選擇器(selector)的觀念尋找元素，如果找到回傳的是串列(list)，select()特色是一次可以找尋所有相符的元素，如果找不到回傳空串列，下列是使用實例:
+select()主要是以CCS選擇器(selector)的觀念尋找元素，如果找到回傳的是串列(list)，select()特色是一次可以找尋所有相符的元素，如果找不到回傳空串列，下列是使用實例:  
 objSoup.select ('p')：找尋所有\<p\>標籤的元素。  
 objSoup.select ('img')：找尋所有\<img\>標籤的元素。  
 objSoup.select ('.happy')：找尋所有CSS class屬性為happy的元素。  
@@ -178,6 +178,59 @@ objSoup.select ('div strong')：找尋所有在\<section\>元素內的\<strong\>
 objSoup.select ('div > strong')：所有在\<section\>內的\<strong\>元素，中間沒有其他元素。  
 objSoup.select ('input[name]')：找尋所有\<input\>標籤且有name屬性的元素。  
 
+```Python
+import bs4
+
+response = open('myhtml.html', encoding='utf-8')
+objSoup = bs4.BeautifulSoup(response, 'lxml')
+objTag = objSoup.select('#author')
+print("資料型態     = ", type(objTag))          # 列印資料型態
+print("串列長度     = ", len(objTag))           # 列印串列長度
+print("元素資料型態 = ", type(objTag[0]))       # 列印元素資料型態
+print("元素內容     = ", objTag[0].getText())   # 列印元素內容
+# 資料型態     =  <class 'list'>
+# 串列長度     =  1
+# 元素資料型態 =  <class 'bs4.element.Tag'>
+# 元素內容     =  黃献竤
+```
+<img width="456" alt="image" src="https://user-images.githubusercontent.com/27804948/169687944-72a51224-8a71-4b56-8cba-e6c35dcda4bc.png">
 
 
+```Python
+import bs4
 
+response = open('myhtml.html', encoding='utf-8')
+objSoup = bs4.BeautifulSoup(response, 'lxml')
+pObjTag = objSoup.select('p')
+print("含<p>標籤的串列長度 = ", len(pObjTag))
+for pObj in pObjTag:
+    print(str(pObj))              # 內部有子標籤<strong>字串
+    print(pObj.getText())         # 沒有子標籤
+    print(pObj.text)              # 沒有子標籤
+```
+
+#### get()
+假設我們現在搜尋\<img\>標籤，\<img\>標籤對網路爬蟲設計很重要，因為可以由此獲得網頁的圖檔資訊。
+```Python
+import bs4
+
+response = open('myhtml.html', encoding='utf-8')
+objSoup = bs4.BeautifulSoup(response, 'lxml')
+imgTag = objSoup.select('img')
+print("含<img>標籤的串列長度 = ", len(imgTag))
+for img in imgTag:              
+    print("列印標籤串列 = ", img)
+    print("列印圖檔     = ", img.get('src'))
+    print("列印圖檔     = ", img['src'])
+# 含<img>標籤的串列長度 =  3
+# 列印標籤串列 =  <img src="python.png" width="200"/>
+# 列印圖檔     =  python.png
+# 列印圖檔     =  python.png
+# 列印標籤串列 =  <img src="facebook.jpg" width="150"/>
+# 列印圖檔     =  facebook.jpg
+# 列印圖檔     =  facebook.jpg
+# 列印標籤串列 =  <img src="line.jpg" width="150"/>
+# 列印圖檔     =  line.jpg
+# 列印圖檔     =  line.jpg
+```
+<img width="507" alt="image" src="https://user-images.githubusercontent.com/27804948/169688263-3f596f10-fb4a-40b6-8898-885c52ebb874.png">
