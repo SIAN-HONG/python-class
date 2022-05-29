@@ -122,7 +122,8 @@ all_text_list
 ```
 ### 利用爬蟲結果搜尋關鍵字
 利用爬蟲結果的list，進一步用字串的find尋找關鍵字(買一送一)，
-比較一下ptt原本的搜尋功能，我們設計的爬蟲結果較少，原因是我們看的歷史網頁不夠多，同學可以調整。
+比較一下ptt原本的搜尋功能，我們設計的爬蟲結果較少，原因是我們看的歷史網頁不夠多，同學可以調整程式碼中的for i in range(2)，調多一點頁面例如for i in range(10)就可以讓爬蟲看更多頁數喔。  
+
 <img width="410" alt="image" src="https://user-images.githubusercontent.com/27804948/170864365-c6ad3760-399e-483e-9a48-0c4f64f3974b.png">
 
 ```Python
