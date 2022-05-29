@@ -153,3 +153,46 @@ select_title(all_text_list,select_str)
 #  '\n[情報] 全家 經典美式/經典拿鐵買一送一\n',
 #  '\n[情報] 台中 十二韻 土鳳梨青茶買一送一\n']
 ```
+
+### ptt八卦版爬蟲
+ptt八卦版在登入網站之前需要說明是否滿18歲(如下圖1)，如果此時爬蟲什麼都不設定就沒辦法抓取資料了。  
+這裡教同學如何跨過這個問題，在網頁中滑鼠點右鍵檢查，找到右邊紅色框框應用程式，如果沒有旁邊有一個箭頭\>\>點開他就可以找到了，接下來就可以找到cookie，再來同學們觀察一下點選買18歲後進入八卦版，有沒有發現多了一欄資料over18它的值是1，此時你在對網頁重新整理就不會再跑出是否滿18歲的問題，是因為你已經帶入了cookie。
+
+![爬蟲ptt八卦版](https://user-images.githubusercontent.com/27804948/170865819-092828eb-1845-4b44-a578-c34be3364e50.png)
+
+<img width="986" alt="image" src="https://user-images.githubusercontent.com/27804948/170865931-9a3a8cd3-9ce4-4db0-ae62-d8cc1f9de85b.png">
+
+以下程式碼示範如何帶cookie進入網站，在requests.get()中帶入url(爬蟲網站)以及cookies={'over18':'1'}，這樣就可以輕鬆帶cookie進入網站摟。  
+```Python
+url = 'https://www.ptt.cc/bbs/Gossiping/index.html'
+response = requests.get(url,cookies={'over18':'1'})
+if response.status_code == requests.codes.ok:
+    print("取得網頁內容成功")
+    print("網頁內容大小 = ", len(response.text))
+else:
+    print("取得網頁內容失敗")
+    print(response.status_code)
+objSoup = bs4.BeautifulSoup(response.text,'lxml')
+dataTag = objSoup.find_all('div',id='main-container')         # 尋找id是main-container
+ptt_title_tag = dataTag[0].find_all('div',class_='title')
+text_list = []
+for i in ptt_title_tag:
+    text_list += [i.text]
+text_list
+# 取得網頁內容成功
+# 網頁內容大小 =  15234
+# ['\nRe: [爆卦]J.K羅琳:為了重新定義陰莖女,女人付出代價\n',
+#  '\n[問卦] 喉嚨痛跟左腳痠痛 穩嗎\n',
+#  '\n[問卦] 這首詩藏著一個大秘密\n',
+#  '\n[問卦] 有沒有小孩出生，得到總統祝福的卦\n',
+#  '\n[問卦] 網球球僮為什麼要像短跑起步一樣\n',
+#  '\nRe: [新聞] 警察打警察！保一學弟營內「狠斷學長腿」\n',
+#  '\n[問卦] 百元快篩多久可買\n',
+#  '\n[問卦] 該不該去看捍衛戰士2？\n',
+#  '\n[問卦] 殭屍越過圍牆了！？\n',
+#  '\n[公告] 八卦板板規(2022.02.21)\n',
+#  '\n[協尋] 5/24 台64五股閘道口嚴重車禍 行車記錄器\n',
+#  '\n[協尋] 5/18 彰化員林行車紀錄器\n',
+#  '\n[協尋] 5/16行車記錄器 高雄光明路與文昌路口\n',
+#  '\n[公告] 防資訊戰 不造謠 不信謠 不傳謠 水桶 \n']
+```
