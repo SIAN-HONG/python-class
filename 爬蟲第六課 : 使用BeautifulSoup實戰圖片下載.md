@@ -26,7 +26,7 @@ with open(fileDir, 'wb') as file:
 ```
 ### Yahoo網站圖片下載
 在Yahoo網站(https://tw.yahoo.com/)中下載圖片，可以發現在<img>裡面的src表示圖檔的網站，但是再進一步觀察發現第5筆資料 
-"<img alt="陳時中：預估10號疫情反轉" class="Cur(p) H(100%)" src="https://s.yimg.com/uu/api/res/1.2/ynhVAFzvgQX54SiMs0n9bw--~B/Zmk9ZmlsbDtoPTM4ODtweW9mZj0wO3c9NzIwO2FwcGlkPXl0YWNoeW9u/https://s.yimg.com/os/creatr-uploaded-images/2022-05/d7a2e840-e47f-11ec-9fbd-82fba7518450"/>"
+\<img alt="陳時中：預估10號疫情反轉" class="Cur(p) H(100%)" src="https://s.yimg.com/uu/api/res/1.2/ynhVAFzvgQX54SiMs0n9bw--~B/Zmk9ZmlsbDtoPTM4ODtweW9mZj0wO3c9NzIwO2FwcGlkPXl0YWNoeW9u/https://s.yimg.com/os/creatr-uploaded-images/2022-05/d7a2e840-e47f-11ec-9fbd-82fba7518450"/\>
 裡面的src網址並沒有圖片的附檔名(.jpg,.png...)，所以在這邊儲存圖片的時候須注意而外給副檔名再存儲。
 ```Python
 # ch5_14.py
