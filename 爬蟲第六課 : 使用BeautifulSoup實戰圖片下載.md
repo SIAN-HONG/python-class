@@ -56,7 +56,7 @@ imgTag
 # ch5_14.py
 import bs4, requests, os
 
-url = 'https://tw.yahoo.com/'                    # 明志科技大學網頁
+url = 'https://tw.yahoo.com/'                    # Yahoo網頁
 html = requests.get(url)
 print("網頁下載中 ...")
 html.raise_for_status()                             # 驗證網頁是否下載成功                      
