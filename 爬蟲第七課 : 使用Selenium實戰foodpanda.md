@@ -8,9 +8,12 @@ python -m pip install selenium
 而要啟動特定的瀏覽器，需要手動安裝相應的WebDriver。本文將以Chrome瀏覽器來作為教學範例。
 首先，前往Python套件庫PyPI，搜尋selenium，進入套件說明畫面後，在下面Drivers的地方，列出了常用的瀏覽器Drivers，如下圖：
 <img width="595" alt="image" src="https://user-images.githubusercontent.com/27804948/173187095-d05e4677-9a74-4989-bbb7-1d53cd833d67.png">
+先看看自己的Chrome是甚麼版本，點擊右上方<img width="14" alt="image" src="https://user-images.githubusercontent.com/27804948/173187276-561035cc-fd5c-473c-920f-d0c0f41efb4b.png">
+接著[設定][關於Google Chrome]
+<img width="959" alt="image" src="https://user-images.githubusercontent.com/27804948/173187216-7807bad0-67d9-4174-941b-3673a207471a.png">
 
 點擊Chrome的下載連結後，選擇要執行的Chrome版本，如下圖：
-![image](https://user-images.githubusercontent.com/27804948/173187121-d3f9dc7d-8d35-4ea9-90fb-aeee7f466a84.png)
+<img width="551" alt="image" src="https://user-images.githubusercontent.com/27804948/173187159-27bb0460-74a7-4ced-bb7a-d9a5ff2095b0.png">
 
 接著，依據作業系統下載安裝檔，如下圖：
 ![image](https://user-images.githubusercontent.com/27804948/173187126-52b6808b-a3a5-4346-9225-c4d7ba2c5451.png)
