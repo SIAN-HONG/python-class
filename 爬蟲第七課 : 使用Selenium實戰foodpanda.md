@@ -44,10 +44,12 @@ element = driver.find_element_by_class_name("gLFyf.gsfi")
 # 傳入字串
 element.send_keys("Selenium Python")
 ```
-<img width="956" alt="image" src="https://user-images.githubusercontent.com/27804948/173188076-b7c302e4-e22a-4ba4-834d-b7f5c3411897.png">
-```Python
+<img width="956" alt="image" src="https://user-images.githubusercontent.com/27804948/173188076-b7c302e4-e22a-4ba4-834d-b7f5c3411897.png">  
+
+```Python 
 button = driver.find_element_by_class_name("gNO89b")
 button.click()
-```
+```  
+  
 <img width="957" alt="image" src="https://user-images.githubusercontent.com/27804948/173188319-8905240f-bfb1-413a-998d-3d4a2a538d35.png">
 
