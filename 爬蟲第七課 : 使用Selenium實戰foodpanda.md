@@ -33,6 +33,21 @@ driver.get(url)
 selenium套件還可以輸入文字點擊搜尋。  
 <img width="952" alt="image" src="https://user-images.githubusercontent.com/27804948/173188242-34a44235-7526-4ad6-a170-6a710a1a2151.png">
 
-<img width="957" alt="image" src="https://user-images.githubusercontent.com/27804948/173188107-fcf2ac7a-99a9-4b23-80f5-7177027b9311.png">
-
+```Python
+from selenium import webdriver
+driver_path = r'C:\Users\fxp87\OneDrive\Desktop\爬蟲\程式碼\chromedriver.exe'
+driver = webdriver.Chrome(driver_path)
+url = 'https://www.google.com/'
+driver.get(url)
+# 定位搜尋框
+element = driver.find_element_by_class_name("gLFyf.gsfi")
+# 傳入字串
+element.send_keys("Selenium Python")
+```
 <img width="956" alt="image" src="https://user-images.githubusercontent.com/27804948/173188076-b7c302e4-e22a-4ba4-834d-b7f5c3411897.png">
+```Python
+button = driver.find_element_by_class_name("gNO89b")
+button.click()
+```
+<img width="957" alt="image" src="https://user-images.githubusercontent.com/27804948/173188319-8905240f-bfb1-413a-998d-3d4a2a538d35.png">
+
