@@ -45,7 +45,7 @@ element = driver.find_element_by_class_name("gLFyf.gsfi")
 element.send_keys("Selenium Python")
 ```
 <img width="956" alt="image" src="https://user-images.githubusercontent.com/27804948/173188076-b7c302e4-e22a-4ba4-834d-b7f5c3411897.png">  
-
+進一步按下搜尋按鈕。
 ```Python 
 button = driver.find_element_by_class_name("gNO89b")
 button.click()
