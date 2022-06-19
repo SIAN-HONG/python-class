@@ -1,4 +1,5 @@
 ## 爬蟲實戰foodpanda
+我們這次來做foodpanda的爬蟲，把你附近餐廳的菜單都爬回來吧!  
 同學們可以先使用request.get試試看抓回的東西，有沒有怪怪的地方?  
 <img width="696" alt="image" src="https://user-images.githubusercontent.com/27804948/174481239-a71efc7f-8d95-4df6-a8eb-7507605b2814.png">
 
@@ -15,5 +16,7 @@ print("串列長度", len(dataTag))
 # None
 # 串列長度 0
 ```
-可以發現怎麼HTML下載的東西不如預期，也找不到<span class='name fn'>
+可以發現怎麼HTML下載的東西不如預期，也找不到\<span class='name fn'\>，那是因為foodpanda他網站架構的關係，他是屬於AJAX框架，會先傳送框架資訊再傳送資料，資料傳送方式是藉由另外的網址傳送，所以你用request.get會抓到網站框架並不是裡面店家的資訊喔!
 ## 下載foodpanda官網HTML
+因為foodpanda是AJAX框架，又找不到網站中回傳資料的網址，所以我們需要用不同方式去抓取，就是Selenium來幫忙做HTML下載，搭配BeautifulSoup去解析HTML，抓取餐廳資訊。  
+
