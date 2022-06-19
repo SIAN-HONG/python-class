@@ -24,15 +24,30 @@ print("串列長度", len(dataTag))
 ```Python
 from selenium import webdriver
 import requests
-latitude = 24.806087
-longitude = 121.0414997
+latitude = 24.8067738
+longitude = 121.0476315
 driver_path = r'C:\Users\fxp87\OneDrive\Desktop\爬蟲\程式碼\chromedriver.exe'
 driver = webdriver.Chrome(driver_path)
 url = 'https://www.foodpanda.com.tw/restaurants/new?lat={}&lng={}&vertical=restaurants&expedition=delivery'.format(latitude,longitude)
 driver.get(url)
-# time.sleep(5)
 driver_html = driver.find_element_by_class_name("vendor-list").get_attribute('innerHTML')
 driver.quit()
 ```
+接下來換BeautifulSoup上場，因為driver_html現在已經是一般文字檔了，所以直接給BeautifulSoup就可以解析  
+(1) .get('data-testid')可以抓到餐廳代碼以便之後到餐廳網址下載菜單及價錢，  
+(2) .find('span', {'class' : 'name fn'})抓到餐廳的名稱，  
+(3) .get('href')拿到餐廳的網址，  
+最後用dictionary蒐集我們抓到的餐廳資訊  
+```Python
+objSoup = bs4.BeautifulSoup(driver_html, 'html.parser')
+dataTag = objSoup.find_all('a')
+restaurants_dict = {}
+for i in range(len(dataTag)):
+    restaurant_id = dataTag[i].get('data-testid').split('-')[-1]
+    restaurants_nm = dataTag[i].find('span', {'class' : 'name fn'}).text
+    restaurant_url = 'https://www.foodpanda.com.tw' + dataTag[i].get('href')
+    restaurants_dict[restaurant_id] = (restaurants_nm,restaurant_url)
+```
+同學在這邊應該會發現說為甚麼已經有餐廳網址了還要載餐廳代碼幹嘛，同學可以用餐廳網址去試看看request.get(restaurant_url)，也是會有跟前面foodpanda首頁一樣的AJAX框架，所以你抓的不會是有資料的餐廳網址，也不能用Selenium一個一個餐廳抓，時間非常久，會有被當作是機器人的風險。
 
 
