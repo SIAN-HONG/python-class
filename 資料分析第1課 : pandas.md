@@ -5,7 +5,7 @@ Pandas能夠有效率的對資料進行篩選及分析。
 2. 能夠快速地進行對資料的前處理，例如缺失值、異質，進行取代或刪除
 3. 能夠從檔案中讀取資料，在整理好後，也能進行輸出  
 
-**Pandas主要分成兩類  
+* Pandas主要分成兩類  
 1. Series(一維)  
 2. DataFrame(二維)  
 
@@ -29,14 +29,14 @@ import pandas as pd
 ##### 建立Series
 建立Series的方法，可對應到Pyhon中的list，使用[]，將資料輸入。  
 
-實作
+
 ```Python
 data = pd.Series([2, 4, 6, 8, 10]) 
 ```
 ##### 更改索引
 Pandas在創造Series時會預設好索引值，由0開始，但有時為了方便尋找資料，或想要有更有意義的索引值，可以自己定義索引值，特別注意，在定義時，數量要與資料一樣，且不能重複，不然會有error產生。  
 
-實作
+
 ```Python
 data = pd.Series([1, 2, 3, 4, 5]) # 使用預設的索引
 data1 = pd.Series([1, 2, 3, 4, 5], index = ["a", "b", "c", "d", "e"]) # 自訂索引
@@ -44,7 +44,7 @@ data1 = pd.Series([1, 2, 3, 4, 5], index = ["a", "b", "c", "d", "e"]) # 自訂�
 ##### 查看資料屬性
 在分析資料上，查看屬性常常是第一步，有時我們以為是int的資料，其實是String，這時怎麼分析都不對，因此建議在對資料進行分析時，事先都先了解每個資料型態，當然，其他屬性也有一定的重要性。  
 
-實作
+
 ```Python
 data = pd.Series([2, 4, 6, 8, 10], index = ["a", "b", "c", "d", "e"]) # 原始資料
 
@@ -55,7 +55,7 @@ print(data.index) # 查看資料索引
 ##### 查看資料
 想查看特定的筆數時，有兩種方法可以查看，第一種是利用預設的順序查看，由0開始，往下遞增，如果有自己定義索引，則可以用新的索引查看資料。  
 
-實作
+
 ```Python
 data = pd.Series([1, 2, 3, 4, 5], index = ["a", "b", "c", "d", "e"]) # 自訂索引
 print(data[0]) # 查看第一筆資料，按照順序
@@ -64,7 +64,7 @@ print(data["a"])# 查看第一筆資料，按照索引
 ##### 數值統計分析
 在上一篇我們介紹過Numpy有統計分析的功能，Pandas也不例外，基本的統計函數皆有包含。  
 
-實作
+
 ```Python
 data = pd.Series([10, 22, 27, 13, 24], index = ["a", "b", "c", "d", "e"]) # 原始資料
 
@@ -81,7 +81,7 @@ print(data.nsmallest(2)) # 列印出資料前兩小的值
 ##### 字串分析
 當原始資料的字母大小寫不一時，在分析上會變得很困難，因此可以利用lower()，upper()，將字串改成統一的大小寫。或者，有時想將資料中字串進行轉換，例如把所有的"嗨"，改成"Hi"，使用Pandas都可以完成，所以字串的操作都定義在str(string)底下，因此在處理字串時，都要加上str。  
 
-實作
+
 ```Python
 data = pd.Series(["Apple", "Banana", "Cherry"])
 
@@ -98,7 +98,7 @@ print(data.str.len()) # 列印出每個字串的長度
 ##### 建立DataFrame
 它的寫法可以對應到Python中的字典，每個key，都有相對應的value，且key不能重複。  
 
-實作
+
 ```Python
 data = pd.DataFrame({
     "name" : ["Justin", "Joyce"],
@@ -109,7 +109,7 @@ data = pd.DataFrame({
 ##### 查看資料
 因為DataFrame是二維的資料，因此在查看時，分為列(橫)查看及行(直)查看，如果輸入key值查看資料的話，會是行(直)查看，若想要列(橫)查看的話，又分為兩種，一種是利用預設的索引，另一種是利用自定義的索引。而當資料量很多的時候，有時想查看前(後)幾筆，觀察資料就好，則可以使用head()、tail()。  
 
-實作
+
 ```Python
 data = pd.DataFrame({
     "fruit" : ["apple", "banana", "peach"],
@@ -133,7 +133,7 @@ print(data.tail(3)) # 查看後三筆資料
 ##### 查看資料屬性
 與Series一樣，在分析前先查看資料的屬性是很重要的一環，可利用size、shape等查看，或者\*\*info()查看所有的資料的屬性。  
 
-實作
+
 ```Python
 data = pd.DataFrame({
     "fruit" : ["apple", "banana", "peach", "cherry", "coconut", "grape", "guava"],
@@ -150,7 +150,7 @@ print(data.info()) # 查看所有資料的屬性，以每個Series顯示
 * inplace = True 不會創立新的物件，直接對原資料進行修改
 * inplace = Flase 更改後給新的物件，原資料不變
 * 預設為Flase  
-實作
+
 ```Python
 data = pd.DataFrame({
     "name" : ["Justin", "Joyce"],
@@ -168,7 +168,7 @@ data.loc[0] = ["Alice", "girl", 90] # 修改第一列全部的值
 ##### 更改索引
 這裡也與Series一樣，如果沒有自定義索引的話，會使用預設索引，想要改變索引可在字典後加上index。  
 
-實作
+
 ```Python
 data = pd.DataFrame({
     "name" : ["Justin", "Joyce"],
@@ -185,7 +185,7 @@ data = pd.DataFrame({
 ##### 增加新欄位(行)
 在設定資料時，或分析資料時，有時會想要新增欄位，讓資料更完整，或更加方便判斷，新增的方式很簡單，因為DataFrame是由一個Series組成，因此想法上就像在增加一個Series，新加入的欄位會由最後面加上，如果要插在中間的話，需要使用insert這個函數。  
 
-實作
+
 ```Python
 data = pd.DataFrame({
     "fruit" : ["apple", "banana", "peach"],
@@ -201,7 +201,7 @@ data["amount"] = [100, 300, 200]# 更改"amount"的值
 ##### 增加新欄位(列)
 有時，會要加入新的資料，可以使用append的方式，在最後面加上資料。  
 
-實作
+
 ```Python
 data = pd.DataFrame({
     "fruit" : ["apple", "banana", "peach"],
@@ -218,7 +218,7 @@ data = data.append(new_data) # 加上新的資料
 ##### 刪除欄位(行及列)
 不需要或錯誤的資料，為了分析方便，可以視情況把它們刪除掉，利用drop函數，可以刪除一行或一列，建議原始的資料不要動到，如果要動到的話，可以先複製一份，更改複製的版本。  
 
-實作
+
 ```Python
 data = pd.DataFrame({
     "name" : ["Justin", "Joyce"],
@@ -234,7 +234,7 @@ data.drop([0], inplace=True) # 以列為軸，利用預設的索引值，刪除�
 在實際的操作上，我們會希望能從檔案中讀取資料進行分析，Pandas能讀取csv、html、json等，最常見的是csv檔，因此接下來都用csv檔進行舉例，其他的檔案也是類似的方式。  
 
 ##### csv檔連結
-實作
+
 ```Python
 data = pd.read_csv("spilt0.csv")  
 ```
@@ -249,7 +249,7 @@ DataFrame.dropna(axis=0, how='any', thresh=None, subset=None, inplace=False)
 DataFrame.fillna(value=None, method=None, axis=None, inplace=False, limit=None, downcast=None, \*\*kwargs)  
 裏頭的參數有不同的功能，要使用的時候，再去查看資料就行了，這裡就不再多說明。  
 
-實作
+
 ```Python
 data.dropna(inplace = True) # 如果有列存在缺失值整列刪除
 data.dropna(axis=1, inplace = True) # 如果有行存在缺失值整行刪除
@@ -259,7 +259,7 @@ data.fillna(value = "NULL", inplace = True) # 如果有資料有缺失值則填�
 ##### 匯出檔案
 在處理完資料，獲得結果後，最後一步就是輸出結果了
 
-實作
+
 data.to_csv("output.csv", index = False) # 將data輸出成csv檔，名稱叫"output.csv"
 index = Flase 表示在輸出時，不要保留索引值，預設為True
 
