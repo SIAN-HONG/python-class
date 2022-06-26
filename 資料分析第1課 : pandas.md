@@ -1,10 +1,8 @@
 ### 前言
-今天是講解如何使用 pandas，pandas 是非常重要讀取、處理資料的工具！\
-* Pandas
-能夠有效率的對資料進行篩選及分析
-Pandas主要分成兩類
-Series(一維)
-DataFrame(二維)
+今天是講解如何使用 pandas，pandas 是非常重要讀取、處理資料的工具！Pandas能夠有效率的對資料進行篩選及分析。  
+* Pandas主要分成兩類
+ - Series(一維)
+ - DataFrame(二維)
 就像Excel 試算表的想法，在Python上呈現
 
 能夠快速地進行對資料的前處理，例如缺失值、異質，進行取代或刪除
