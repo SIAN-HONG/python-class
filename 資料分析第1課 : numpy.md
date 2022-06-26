@@ -20,15 +20,16 @@ Numpy是參考CPyton創造出來的，因為Python在執行數學運算上，直
 1. 多維陣列
 2. 線性代數
 3. 傅立葉轉換
-4. 亂數產生
-...
-引入NumPy
+4. 亂數產生  
+...  
+#### 引入NumPy
 要使用NumPy的話，需要引入這個library，習慣上會用 np 作為縮寫
 
 ```Python
 import numpy as np
 ```
 #### 創造陣列
+
 1. numpy.array  
 最基本用來創造array的方法，常用於初始化陣列
 ```Python
@@ -44,7 +45,8 @@ dtype : bool(布林值), int(整數), float(浮點數), complex(複數)
 copy : 複製array，預設為True，複製值的意思，原始的資料變動，不會影響到新產生的陣列，反之False的話，不僅複製值位置也一起複製了，因此原始資料變動，新陣列裡的元素也會改變  
 order : 'C'(以行的順序儲存資料); 'F'(以列的順序儲存資料))  
 subok : 預設為False，基本上不會用到，在此就不做介紹了  
-ndmin : 最小維度  
+ndmin : 最小維度 
+
 2. numpy.arange  
 此陣列以等差數列的形式產生，指定間隔  
 ```Python
@@ -54,6 +56,7 @@ start : 從某數開始，預設為0
 stop : 到某數停止(不包含)  
 step : 間格多少  
 dtype : bool(布林值), int(整數), float(浮點數), complex(複數)  
+
 3. numpy.linspace(等差數列)  
 此陣列以等差數列的形式產生，指定個數  
 ```Python
@@ -69,6 +72,7 @@ num : start到stop之間有多少數字
 endpoint : True(包含stop); False(不包含stop)，預設為True  
 restep : 若是True，則會在array的後面，加上間隔多少，預設為False  
 dtype : bool(布林值), int(整數), float(浮點數), complex(複數)  
+
 4. numpy.logspace(等比數列)  
 此陣列以等比數列的形式產生  
 ```Python
@@ -92,6 +96,7 @@ g = np.empty(2) # 空的，但非零，有殘留值
 h = np.linspace(10, 20,  5, endpoint =  False) # 10到20(不包含)等差的5個數
 i = np.logspace(10, 1000,  5, endpoint =  True) # 10到1000(包含)等比(以10為底)的五個數
 ```
+
 #### 四則運算
 array的大小一致的話，可以直接做加減乘除的運算，其運算是元素對元素  
 
@@ -132,10 +137,9 @@ m = np.maximum(x, y) # 取出x, y中比大的數值
 n = np.sign(x) # 判斷x的正負號，1.為正，-1.為負
 p = np.floor(x) # 地板函數，為不大於數值的最大整數
 q = np.ceil(x) # 天花板函數，為不小於數值的最小整數
-```Python
+```
 #### 廣播
 在四則運算時，我們提到大小一致的話，可以直接進行運算，那如果不一致的話，難道就不行嗎？答案是可以的，只要用廣播的技巧即可  
-
 如果兩個陣列的維度不一樣，則會在維度較小的陣列最前面補上一個維度  
 只有 1 可以拓展上去  
 拓展所有為 1 的地方使得兩個矩陣相對應的維度一樣  
