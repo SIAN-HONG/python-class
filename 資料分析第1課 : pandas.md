@@ -1,6 +1,6 @@
 ### 前言
-今天是講解如何使用 pandas，pandas 是非常重要讀取、處理資料的工具！  
-Pandas
+今天是講解如何使用 pandas，pandas 是非常重要讀取、處理資料的工具！\
+* Pandas
 能夠有效率的對資料進行篩選及分析
 Pandas主要分成兩類
 Series(一維)
